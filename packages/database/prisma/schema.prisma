@@ -1,0 +1,726 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// ============================ BETTER AUTH TABLES ============================
+
+model user {
+  id            String    @id @default(uuid()) @db.Uuid
+  name          String
+  email         String    @unique
+  emailVerified Boolean   @default(false)
+  image         String?
+  role          String    @default("SECRETARIA")
+  avatar_url    String?
+  is_active     Boolean   @default(true)
+  last_login_at DateTime?
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+  deleted_at    DateTime?
+
+  accounts         account[]
+  sessions         session[]
+  user_schools     user_schools[]
+  teacher          teachers?
+  student          students?
+  guardian         guardians?
+  messages_sent    messages[]     @relation("sender")
+  notifications    notifications[]
+  payments         payments[]
+  conversation_participants conversation_participants[]
+
+  @@map("user")
+}
+
+model session {
+  id        String   @id @default(uuid())
+  expiresAt DateTime
+  token     String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  ipAddress String?
+  userAgent String?
+  userId    String   @db.Uuid
+
+  user user @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("session")
+}
+
+model account {
+  id                    String   @id @default(uuid())
+  accountId             String
+  providerId            String
+  userId                String   @db.Uuid
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  user user @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("account")
+}
+
+model verification {
+  id         String   @id @default(uuid())
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@map("verification")
+}
+
+// ============================ CORE ============================
+
+model schools {
+  id            String   @id @default(uuid()) @db.Uuid
+  name          String
+  slug          String   @unique
+  logo_url      String?
+  address       String?
+  phone         String?
+  email         String?
+  is_active     Boolean  @default(true)
+  created_at    DateTime @default(now())
+  updated_at    DateTime @updatedAt
+  deleted_at    DateTime?
+
+  academic_years    academic_years[]
+  academic_levels   academic_levels[]
+  grades            grades[]
+  user_schools      user_schools[]
+  students          students[]
+  teachers          teachers[]
+  subjects          subjects[]
+  announcements     announcements[]
+  events            events[]
+  payment_methods   payment_methods[]
+
+  @@map("schools")
+}
+
+model academic_years {
+  id          String    @id @default(uuid()) @db.Uuid
+  school_id   String    @db.Uuid
+  year_label  String
+  start_date  DateTime
+  end_date    DateTime
+  is_active   Boolean   @default(false)
+  created_at  DateTime  @default(now())
+  updated_at  DateTime  @updatedAt
+  deleted_at  DateTime?
+
+  school           schools              @relation(fields: [school_id], references: [id])
+  enrollments      enrollments[]
+  attendances      attendances[]
+  student_grades   student_grades[]
+  behavior_reports behavior_reports[]
+  invoices         invoices[]
+  schedules        schedules[]
+
+  @@unique([school_id, year_label])
+  @@index([school_id])
+  @@map("academic_years")
+}
+
+model user_schools {
+  id               String    @id @default(uuid()) @db.Uuid
+  user_id          String    @db.Uuid
+  school_id        String    @db.Uuid
+  role             String
+  is_active        Boolean   @default(true)
+  created_at       DateTime  @default(now())
+  updated_at       DateTime  @updatedAt
+  deleted_at       DateTime?
+
+  user   user    @relation(fields: [user_id], references: [id])
+  school schools @relation(fields: [school_id], references: [id])
+
+  @@unique([user_id, school_id])
+  @@index([user_id])
+  @@index([school_id])
+  @@map("user_schools")
+}
+
+// ============================ SECRETARÍA ============================
+
+model academic_levels {
+  id          String    @id @default(uuid()) @db.Uuid
+  school_id   String    @db.Uuid
+  name        String
+  sort_order  Int       @default(0)
+  created_at  DateTime  @default(now())
+  updated_at  DateTime  @updatedAt
+  deleted_at  DateTime?
+
+  school schools @relation(fields: [school_id], references: [id])
+  grades grades[]
+
+  @@unique([school_id, name])
+  @@index([school_id])
+  @@map("academic_levels")
+}
+
+model grades {
+  id                String    @id @default(uuid()) @db.Uuid
+  academic_level_id String    @db.Uuid
+  school_id         String    @db.Uuid
+  name              String
+  sort_order        Int       @default(0)
+  created_at        DateTime  @default(now())
+  updated_at        DateTime  @updatedAt
+  deleted_at        DateTime?
+
+  academic_level      academic_levels     @relation(fields: [academic_level_id], references: [id])
+  school              schools             @relation(fields: [school_id], references: [id])
+  sections            sections[]
+  enrollments         enrollments[]
+  teacher_assignments teacher_assignments[]
+  schedules           schedules[]
+
+  @@unique([school_id, academic_level_id, name])
+  @@index([school_id])
+  @@index([academic_level_id])
+  @@map("grades")
+}
+
+model sections {
+  id          String    @id @default(uuid()) @db.Uuid
+  grade_id    String    @db.Uuid
+  school_id   String    @db.Uuid
+  name        String
+  capacity    Int       @default(30)
+  sort_order  Int       @default(0)
+  created_at  DateTime  @default(now())
+  updated_at  DateTime  @updatedAt
+  deleted_at  DateTime?
+
+  grade               grades               @relation(fields: [grade_id], references: [id])
+  enrollments         enrollments[]
+  teacher_assignments teacher_assignments[]
+  schedules           schedules[]
+  attendances         attendances[]
+
+  @@unique([grade_id, name])
+  @@index([school_id])
+  @@index([grade_id])
+  @@map("sections")
+}
+
+model students {
+  id                  String    @id @default(uuid()) @db.Uuid
+  user_id             String?   @unique @db.Uuid
+  school_id           String    @db.Uuid
+  first_name          String
+  last_name           String
+  document_type       String?
+  document_number     String?
+  birth_date          DateTime?
+  gender              String?
+  address             String?
+  medical_notes       String?
+  emergency_contact   String?
+  emergency_phone     String?
+  is_active           Boolean   @default(true)
+  created_at          DateTime  @default(now())
+  updated_at          DateTime  @updatedAt
+  deleted_at          DateTime?
+
+  user              user?             @relation(fields: [user_id], references: [id])
+  school            schools           @relation(fields: [school_id], references: [id])
+  student_guardians student_guardians[]
+  enrollments       enrollments[]
+  attendances       attendances[]
+  student_grades    student_grades[]
+  behavior_reports  behavior_reports[]
+  invoices          invoices[]
+
+  @@index([school_id])
+  @@index([document_number])
+  @@map("students")
+}
+
+model guardians {
+  id            String    @id @default(uuid()) @db.Uuid
+  user_id       String?   @unique @db.Uuid
+  school_id     String    @db.Uuid
+  first_name    String
+  last_name     String
+  relationship  String?
+  phone         String?
+  email         String?
+  is_primary    Boolean   @default(false)
+  created_at    DateTime  @default(now())
+  updated_at    DateTime  @updatedAt
+  deleted_at    DateTime?
+
+  user              user?             @relation(fields: [user_id], references: [id])
+  student_guardians student_guardians[]
+
+  @@index([school_id])
+  @@map("guardians")
+}
+
+model student_guardians {
+  id          String    @id @default(uuid()) @db.Uuid
+  student_id  String    @db.Uuid
+  guardian_id String    @db.Uuid
+  created_at  DateTime  @default(now())
+  updated_at  DateTime  @updatedAt
+  deleted_at  DateTime?
+
+  student  students  @relation(fields: [student_id], references: [id])
+  guardian guardians @relation(fields: [guardian_id], references: [id])
+
+  @@unique([student_id, guardian_id])
+  @@index([student_id])
+  @@index([guardian_id])
+  @@map("student_guardians")
+}
+
+model admissions {
+  id              String    @id @default(uuid()) @db.Uuid
+  school_id       String    @db.Uuid
+  first_name      String
+  last_name       String
+  document_type   String?
+  document_number String?
+  birth_date      DateTime?
+  desired_grade_id String?  @db.Uuid
+  status          String    @default("PENDIENTE")
+  notes           String?
+  created_at      DateTime  @default(now())
+  updated_at      DateTime  @updatedAt
+  deleted_at      DateTime?
+
+  @@index([school_id])
+  @@index([status])
+  @@map("admissions")
+}
+
+model enrollments {
+  id               String    @id @default(uuid()) @db.Uuid
+  student_id       String    @db.Uuid
+  grade_id         String    @db.Uuid
+  section_id       String    @db.Uuid
+  academic_year_id String    @db.Uuid
+  school_id        String    @db.Uuid
+  is_active        Boolean   @default(true)
+  enrolled_at      DateTime  @default(now())
+  created_at       DateTime  @default(now())
+  updated_at       DateTime  @updatedAt
+  deleted_at       DateTime?
+
+  student       students       @relation(fields: [student_id], references: [id])
+  grade         grades         @relation(fields: [grade_id], references: [id])
+  section       sections       @relation(fields: [section_id], references: [id])
+  academic_year academic_years @relation(fields: [academic_year_id], references: [id])
+
+  @@unique([student_id, academic_year_id])
+  @@index([school_id])
+  @@index([academic_year_id])
+  @@index([grade_id])
+  @@index([section_id])
+  @@map("enrollments")
+}
+
+// ============================ GESTIÓN DOCENTE ============================
+
+model teachers {
+  id               String    @id @default(uuid()) @db.Uuid
+  user_id          String?   @unique @db.Uuid
+  school_id        String    @db.Uuid
+  first_name       String
+  last_name        String
+  specialties      String?
+  is_active        Boolean   @default(true)
+  created_at       DateTime  @default(now())
+  updated_at       DateTime  @updatedAt
+  deleted_at       DateTime?
+
+  user                user?               @relation(fields: [user_id], references: [id])
+  school              schools             @relation(fields: [school_id], references: [id])
+  teacher_assignments teacher_assignments[]
+  schedules           schedules[]
+
+  @@index([school_id])
+  @@map("teachers")
+}
+
+model subjects {
+  id          String    @id @default(uuid()) @db.Uuid
+  school_id   String    @db.Uuid
+  name        String
+  code        String?
+  description String?
+  created_at  DateTime  @default(now())
+  updated_at  DateTime  @updatedAt
+  deleted_at  DateTime?
+
+  school              schools              @relation(fields: [school_id], references: [id])
+  teacher_assignments teacher_assignments[]
+  schedules           schedules[]
+  grade_items         grade_items[]
+
+  @@unique([school_id, name])
+  @@index([school_id])
+  @@map("subjects")
+}
+
+model teacher_assignments {
+  id          String    @id @default(uuid()) @db.Uuid
+  teacher_id  String    @db.Uuid
+  subject_id  String    @db.Uuid
+  grade_id    String    @db.Uuid
+  section_id  String?   @db.Uuid
+  school_id   String    @db.Uuid
+  is_primary  Boolean   @default(false)
+  created_at  DateTime  @default(now())
+  updated_at  DateTime  @updatedAt
+  deleted_at  DateTime?
+
+  teacher teachers  @relation(fields: [teacher_id], references: [id])
+  subject subjects  @relation(fields: [subject_id], references: [id])
+  grade   grades    @relation(fields: [grade_id], references: [id])
+  section sections? @relation(fields: [section_id], references: [id])
+
+  @@index([school_id])
+  @@index([teacher_id])
+  @@index([subject_id])
+  @@index([grade_id])
+  @@map("teacher_assignments")
+}
+
+model schedules {
+  id               String    @id @default(uuid()) @db.Uuid
+  school_id        String    @db.Uuid
+  academic_year_id String    @db.Uuid
+  grade_id         String    @db.Uuid
+  section_id       String?   @db.Uuid
+  subject_id       String    @db.Uuid
+  teacher_id       String    @db.Uuid
+  day_of_week      Int
+  start_time       String
+  end_time         String
+  classroom        String?
+  created_at       DateTime  @default(now())
+  updated_at       DateTime  @updatedAt
+  deleted_at       DateTime?
+
+  academic_year academic_years @relation(fields: [academic_year_id], references: [id])
+  grade         grades         @relation(fields: [grade_id], references: [id])
+  section       sections?      @relation(fields: [section_id], references: [id])
+  subject       subjects       @relation(fields: [subject_id], references: [id])
+  teacher       teachers       @relation(fields: [teacher_id], references: [id])
+
+  @@index([school_id])
+  @@index([academic_year_id])
+  @@index([grade_id])
+  @@index([section_id])
+  @@index([teacher_id])
+  @@map("schedules")
+}
+
+// ============================ GESTIÓN DEL AULA ============================
+
+model attendances {
+  id               String    @id @default(uuid()) @db.Uuid
+  school_id        String    @db.Uuid
+  academic_year_id String    @db.Uuid
+  student_id       String    @db.Uuid
+  section_id       String    @db.Uuid
+  date             DateTime
+  status           String    @default("PRESENTE")
+  notes            String?
+  marked_by        String?   @db.Uuid
+  created_at       DateTime  @default(now())
+  updated_at       DateTime  @updatedAt
+  deleted_at       DateTime?
+
+  academic_year academic_years @relation(fields: [academic_year_id], references: [id])
+  student       students       @relation(fields: [student_id], references: [id])
+  section       sections       @relation(fields: [section_id], references: [id])
+
+  @@unique([student_id, date])
+  @@index([school_id])
+  @@index([academic_year_id])
+  @@index([section_id, date])
+  @@index([date])
+  @@map("attendances")
+}
+
+model grade_items {
+  id               String    @id @default(uuid()) @db.Uuid
+  school_id        String    @db.Uuid
+  academic_year_id String    @db.Uuid
+  subject_id       String    @db.Uuid
+  grade_id         String    @db.Uuid
+  section_id       String?   @db.Uuid
+  name             String
+  weight           Decimal   @default(1.0) @db.Decimal(5, 2)
+  period           String    @default("TRIMESTRE_1")
+  created_at       DateTime  @default(now())
+  updated_at       DateTime  @updatedAt
+  deleted_at       DateTime?
+
+  subject       subjects       @relation(fields: [subject_id], references: [id])
+  student_grades student_grades[]
+
+  @@index([school_id])
+  @@index([academic_year_id])
+  @@index([subject_id])
+  @@index([grade_id])
+  @@map("grade_items")
+}
+
+model student_grades {
+  id               String    @id @default(uuid()) @db.Uuid
+  academic_year_id String    @db.Uuid
+  student_id       String    @db.Uuid
+  grade_item_id    String    @db.Uuid
+  score            Decimal?  @db.Decimal(5, 2)
+  notes            String?
+  graded_by        String?   @db.Uuid
+  created_at       DateTime  @default(now())
+  updated_at       DateTime  @updatedAt
+  deleted_at       DateTime?
+
+  academic_year academic_years @relation(fields: [academic_year_id], references: [id])
+  student       students       @relation(fields: [student_id], references: [id])
+  grade_item    grade_items    @relation(fields: [grade_item_id], references: [id])
+
+  @@unique([student_id, grade_item_id])
+  @@index([academic_year_id])
+  @@index([student_id])
+  @@index([grade_item_id])
+  @@map("student_grades")
+}
+
+model behavior_reports {
+  id               String    @id @default(uuid()) @db.Uuid
+  school_id        String    @db.Uuid
+  academic_year_id String    @db.Uuid
+  student_id       String    @db.Uuid
+  reported_by      String?   @db.Uuid
+  type             String    @default("OBSERVACION")
+  description      String
+  severity         String?   @default("LEVE")
+  created_at       DateTime  @default(now())
+  updated_at       DateTime  @updatedAt
+  deleted_at       DateTime?
+
+  academic_year academic_years @relation(fields: [academic_year_id], references: [id])
+  student       students       @relation(fields: [student_id], references: [id])
+
+  @@index([school_id])
+  @@index([academic_year_id])
+  @@index([student_id])
+  @@map("behavior_reports")
+}
+
+// ============================ COMUNICACIÓN ============================
+
+model announcements {
+  id          String    @id @default(uuid()) @db.Uuid
+  school_id   String    @db.Uuid
+  author_id   String    @db.Uuid
+  title       String
+  content     String
+  target      String    @default("TODOS")
+  grade_id    String?   @db.Uuid
+  created_at  DateTime  @default(now())
+  updated_at  DateTime  @updatedAt
+  deleted_at  DateTime?
+
+  school schools @relation(fields: [school_id], references: [id])
+
+  @@index([school_id])
+  @@index([created_at])
+  @@map("announcements")
+}
+
+model conversations {
+  id          String    @id @default(uuid()) @db.Uuid
+  school_id   String    @db.Uuid
+  title       String?
+  is_group    Boolean   @default(false)
+  created_at  DateTime  @default(now())
+  updated_at  DateTime  @updatedAt
+  deleted_at  DateTime?
+
+  participants conversation_participants[]
+  messages     messages[]
+
+  @@index([school_id])
+  @@map("conversations")
+}
+
+model conversation_participants {
+  id              String    @id @default(uuid()) @db.Uuid
+  conversation_id String    @db.Uuid
+  user_id         String    @db.Uuid
+  joined_at       DateTime  @default(now())
+  created_at      DateTime  @default(now())
+
+  conversation conversations @relation(fields: [conversation_id], references: [id])
+  user         user          @relation(fields: [user_id], references: [id])
+
+  @@unique([conversation_id, user_id])
+  @@index([conversation_id])
+  @@index([user_id])
+  @@map("conversation_participants")
+}
+
+model messages {
+  id              String    @id @default(uuid()) @db.Uuid
+  conversation_id String    @db.Uuid
+  sender_id       String    @db.Uuid
+  content         String
+  is_read         Boolean   @default(false)
+  read_at         DateTime?
+  created_at      DateTime  @default(now())
+  deleted_at      DateTime?
+
+  conversation conversations @relation(fields: [conversation_id], references: [id])
+  sender       user          @relation("sender", fields: [sender_id], references: [id])
+
+  @@index([conversation_id, created_at])
+  @@index([sender_id])
+  @@map("messages")
+}
+
+model events {
+  id          String    @id @default(uuid()) @db.Uuid
+  school_id   String    @db.Uuid
+  title       String
+  description String?
+  start_date  DateTime
+  end_date    DateTime
+  target      String    @default("TODOS")
+  grade_id    String?   @db.Uuid
+  created_by  String?   @db.Uuid
+  created_at  DateTime  @default(now())
+  updated_at  DateTime  @updatedAt
+  deleted_at  DateTime?
+
+  school schools @relation(fields: [school_id], references: [id])
+
+  @@index([school_id])
+  @@index([start_date])
+  @@map("events")
+}
+
+model notifications {
+  id          String    @id @default(uuid()) @db.Uuid
+  user_id     String    @db.Uuid
+  title       String
+  content     String
+  type        String    @default("INFO")
+  is_read     Boolean   @default(false)
+  read_at     DateTime?
+  link        String?
+  created_at  DateTime  @default(now())
+
+  user user @relation(fields: [user_id], references: [id])
+
+  @@index([user_id, is_read])
+  @@index([created_at])
+  @@map("notifications")
+}
+
+// ============================ FINANZAS ============================
+
+model invoices {
+  id               String    @id @default(uuid()) @db.Uuid
+  school_id        String    @db.Uuid
+  academic_year_id String    @db.Uuid
+  student_id       String    @db.Uuid
+  concept          String
+  amount           Decimal   @db.Decimal(10, 2)
+  currency         String    @default("EUR")
+  status           String    @default("PENDIENTE")
+  due_date         DateTime
+  paid_at          DateTime?
+  created_at       DateTime  @default(now())
+  updated_at       DateTime  @updatedAt
+  deleted_at       DateTime?
+
+  academic_year academic_years @relation(fields: [academic_year_id], references: [id])
+  student       students       @relation(fields: [student_id], references: [id])
+  payments      payments[]
+
+  @@index([school_id])
+  @@index([academic_year_id])
+  @@index([student_id])
+  @@index([status])
+  @@map("invoices")
+}
+
+model payments {
+  id              String    @id @default(uuid()) @db.Uuid
+  school_id       String    @db.Uuid
+  invoice_id      String    @db.Uuid
+  payer_id        String    @db.Uuid
+  amount          Decimal   @db.Decimal(10, 2)
+  currency        String    @default("EUR")
+  method          String    @default("STRIPE")
+  transaction_id  String?
+  status          String    @default("COMPLETADO")
+  paid_at         DateTime  @default(now())
+  created_at      DateTime  @default(now())
+  updated_at      DateTime  @updatedAt
+
+  invoice invoices @relation(fields: [invoice_id], references: [id])
+  payer   user     @relation(fields: [payer_id], references: [id])
+
+  @@index([school_id])
+  @@index([invoice_id])
+  @@map("payments")
+}
+
+model payment_methods {
+  id          String    @id @default(uuid()) @db.Uuid
+  school_id   String    @db.Uuid
+  name        String
+  type        String    @default("STRIPE")
+  is_active   Boolean   @default(true)
+  config      Json?
+  created_at  DateTime  @default(now())
+  updated_at  DateTime  @updatedAt
+
+  school schools @relation(fields: [school_id], references: [id])
+
+  @@index([school_id])
+  @@map("payment_methods")
+}
+
+model financial_movements {
+  id          String    @id @default(uuid()) @db.Uuid
+  school_id   String    @db.Uuid
+  type        String
+  concept     String
+  amount      Decimal   @db.Decimal(10, 2)
+  currency    String    @default("EUR")
+  reference   String?
+  created_at  DateTime  @default(now())
+  updated_at  DateTime  @updatedAt
+
+  @@index([school_id])
+  @@index([type])
+  @@index([created_at])
+  @@map("financial_movements")
+}

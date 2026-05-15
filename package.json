@@ -1,0 +1,22 @@
+{
+  "name": "insti",
+  "private": true,
+  "scripts": {
+    "dev": "turbo dev",
+    "build": "turbo build",
+    "lint": "turbo lint",
+    "typecheck": "turbo typecheck",
+    "db:migrate": "pnpm --filter @insti/database db:migrate",
+    "db:generate": "pnpm --filter @insti/database db:generate",
+    "db:studio": "pnpm --filter @insti/database db:studio",
+    "db:push": "pnpm --filter @insti/database db:push"
+  },
+  "devDependencies": {
+    "turbo": "^2.5.0",
+    "typescript": "^5.7.0"
+  },
+  "packageManager": "pnpm@11.1.2",
+  "engines": {
+    "node": ">=20"
+  }
+}
