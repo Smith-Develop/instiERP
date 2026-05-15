@@ -1,19 +1,21 @@
-import { Card, CardHeader, CardTitle, CardContent } from "@insti/ui";
+import { db } from "@insti/database";
+import { getSessionContext } from "@/lib/context";
+import { AnnouncementList } from "@/modules/announcements/announcement-list";
 
-export default function CommunicationPage() {
+export default async function CommunicationPage() {
+  const ctx = await getSessionContext();
+  const announcements = await db.announcements.findMany({
+    where: { school_id: ctx.schoolId, deleted_at: null },
+    orderBy: { created_at: "desc" },
+    take: 30,
+  });
   return (
     <div className="space-y-6">
-      <h2 className="text-2xl font-bold text-slate-900">Comunicación</h2>
-      <Card>
-        <CardHeader>
-          <CardTitle>Próximamente</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-sm text-slate-500">
-            Anuncios, mensajería interna y notificaciones para toda la comunidad educativa.
-          </p>
-        </CardContent>
-      </Card>
+      <div className="flex items-center justify-between">
+        <div><h2 className="text-2xl font-bold text-slate-900">Comunicación</h2><p className="text-sm text-slate-500">{announcements.length} anuncios</p></div>
+        <a href="/dashboard/communication/new" className="inline-flex items-center gap-2 rounded-md bg-[#1E3A5F] px-4 py-2 text-sm font-medium text-white hover:bg-[#2D5A8A]">+ Nuevo anuncio</a>
+      </div>
+      <AnnouncementList announcements={announcements} />
     </div>
   );
 }

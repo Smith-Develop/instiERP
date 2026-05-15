@@ -380,6 +380,52 @@ async function main() {
   }
   console.log(`    ✓ 3 criterios de evaluación para ${matSubject.name}`);
 
+  // 15. Announcements
+  console.log("  Creando anuncios de prueba...");
+  const announcementData = [
+    { title: "Bienvenida al curso 2026-2027", content: "Estimadas familias, les damos la bienvenida al nuevo año escolar. Las clases comienzan el 1 de septiembre.", target: "PADRES" },
+    { title: "Reunión de profesores", content: "Se convoca a todo el claustro a la reunión de inicio de curso el viernes 29 de agosto a las 10:00 en la sala de profesores.", target: "PROFESORES" },
+    { title: "Festival de fin de curso", content: "¡Reserven la fecha! El festival de fin de curso será el 20 de junio. Habrá actuaciones, comida y actividades para todos.", target: "TODOS" },
+  ];
+  for (const a of announcementData) {
+    await db.announcements.create({ data: { ...a, school_id: school.id, author_id: adminUser.id } }).catch(() => {});
+  }
+  console.log(`    ✓ ${announcementData.length} anuncios`);
+
+  // 16. Events
+  console.log("  Creando eventos de prueba...");
+  const eventData = [
+    { title: "Inicio de clases", description: "Primer día de clases del curso 2026-2027", start_date: new Date("2026-09-01"), end_date: new Date("2026-09-01"), target: "TODOS" },
+    { title: "Vacaciones de Navidad", description: "Sin clases del 23 de diciembre al 7 de enero", start_date: new Date("2026-12-23"), end_date: new Date("2027-01-07"), target: "TODOS" },
+    { title: "Exámenes finales", description: "Semana de exámenes del primer trimestre", start_date: new Date("2026-12-15"), end_date: new Date("2026-12-19"), target: "ESTUDIANTES" },
+  ];
+  for (const ev of eventData) {
+    await db.events.create({ data: { ...ev, school_id: school.id, created_by: adminUser.id } }).catch(() => {});
+  }
+  console.log(`    ✓ ${eventData.length} eventos`);
+
+  // 17. Invoices
+  console.log("  Creando facturas de prueba...");
+  const invoiceData = [
+    { student_id: createdStudents[0]!.id, concept: "Matrícula 2026-2027", amount: 350, status: "PAGADO" as const },
+    { student_id: createdStudents[1]!.id, concept: "Matrícula 2026-2027", amount: 350, status: "PENDIENTE" as const },
+    { student_id: createdStudents[2]!.id, concept: "Comedor — Septiembre", amount: 120, status: "PAGADO" as const },
+    { student_id: createdStudents[3]!.id, concept: "Transporte escolar", amount: 80, status: "PENDIENTE" as const },
+  ];
+  for (const inv of invoiceData) {
+    await db.invoices.create({
+      data: {
+        ...inv,
+        school_id: school.id,
+        academic_year_id: academicYear.id,
+        currency: "EUR",
+        due_date: new Date(Date.now() + 30 * 86400000),
+        paid_at: inv.status === "PAGADO" ? new Date() : null,
+      },
+    }).catch(() => {});
+  }
+  console.log(`    ✓ ${invoiceData.length} facturas`);
+
   console.log("\n✅ Seed completado.");
   console.log("\n📧 Credenciales de prueba:");
   console.log("   admin@insti.dev       / admin123   (SUPER_ADMIN)");

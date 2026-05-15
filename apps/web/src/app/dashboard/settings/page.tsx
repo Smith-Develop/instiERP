@@ -1,19 +1,19 @@
-import { Card, CardHeader, CardTitle, CardContent } from "@insti/ui";
+import { db } from "@insti/database";
+import { getSessionContext } from "@/lib/context";
+import { SettingsForm } from "@/modules/settings/settings-form";
 
-export default function SettingsPage() {
+export default async function SettingsPage() {
+  const ctx = await getSessionContext();
+  const school = await db.schools.findUnique({ where: { id: ctx.schoolId } });
+  const academicYears = await db.academic_years.findMany({
+    where: { school_id: ctx.schoolId, deleted_at: null },
+    orderBy: { start_date: "desc" },
+  });
+
   return (
-    <div className="space-y-6">
+    <div className="max-w-2xl space-y-6">
       <h2 className="text-2xl font-bold text-slate-900">Configuración</h2>
-      <Card>
-        <CardHeader>
-          <CardTitle>Próximamente</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-sm text-slate-500">
-            Configuración del colegio, año lectivo, roles y permisos.
-          </p>
-        </CardContent>
-      </Card>
+      <SettingsForm school={school} academicYears={academicYears} />
     </div>
   );
 }
