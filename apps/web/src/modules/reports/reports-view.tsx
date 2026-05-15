@@ -3,8 +3,9 @@
 import { useState, useEffect, useCallback } from "react";
 import { Button } from "@insti/ui";
 import { Download, FileText, Loader2, Lock, Unlock } from "lucide-react";
+import Link from "next/link";
 
-type Section = { id: string; label: string };
+type Section = { id: string; label: string; gradeId?: string };
 type StudentRow = { id: string; name: string; average: number; items: { name: string; score: number | null }[] };
 
 export function ReportsView({
@@ -19,25 +20,18 @@ export function ReportsView({
   const [downloadingSection, setDownloadingSection] = useState<string | null>(null);
   const [downloadingCert, setDownloadingCert] = useState<string | null>(null);
   const [closedPeriods, setClosedPeriods] = useState<Set<string>>(new Set());
+  const [closingGrade, setClosingGrade] = useState(sections[0]?.gradeId ?? sections[0]?.id ?? "");
+  const [toggling, setToggling] = useState<string | null>(null);
 
   const loadClosedPeriods = useCallback(async () => {
-    const res = await fetch("/api/reports/close-period");
+    const res = await fetch(`/api/reports/close-period?gradeId=${closingGrade}`);
     const data = await res.json();
     if (data.data) {
-      setClosedPeriods(new Set(data.data.map((c: { period: string; grade_id: string }) => `${c.grade_id}:${c.period}`)));
+      setClosedPeriods(new Set(data.data.map((c: { period: string }) => c.period)));
     }
-  }, []);
+  }, [closingGrade]);
 
   useEffect(() => { loadClosedPeriods(); }, [loadClosedPeriods]);
-
-  async function togglePeriodClose(gradeId: string, period: string, close: boolean) {
-    await fetch("/api/reports/close-period", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ gradeId, period, close }),
-    });
-    await loadClosedPeriods();
-  }
 
   async function downloadBoletin(sectionId: string) {
     setDownloadingSection(sectionId);
@@ -79,6 +73,17 @@ export function ReportsView({
     }
   }
 
+  async function togglePeriodClose(period: string, close: boolean) {
+    setToggling(period);
+    await fetch("/api/reports/close-period", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ gradeId: closingGrade, period, close }),
+    });
+    await loadClosedPeriods();
+    setToggling(null);
+  }
+
   return (
     <div className="space-y-6">
       <div>
@@ -108,18 +113,33 @@ export function ReportsView({
       {/* Cierre de periodos */}
       <div className="rounded-lg border border-slate-200 bg-white p-6">
         <h3 className="font-semibold text-slate-900 mb-4">Cierre de periodos</h3>
-        <p className="text-sm text-slate-500 mb-4">Cierra un periodo para evitar ediciones de notas. Las calificaciones quedarán bloqueadas.</p>
+        <p className="text-sm text-slate-500 mb-4">Selecciona un grado y cierra el periodo para bloquear la edición de notas.</p>
+        <div className="flex flex-wrap items-end gap-4 mb-4">
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-slate-700">Grado</label>
+            <select
+              value={closingGrade}
+              onChange={(e) => setClosingGrade(e.target.value)}
+              className="flex h-10 w-full min-w-[200px] rounded-md border border-slate-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-slate-700"
+            >
+              {sections.map((s) => (
+                <option key={s.id} value={s.gradeId ?? s.id}>{s.label}</option>
+              ))}
+            </select>
+          </div>
+        </div>
         <div className="flex flex-wrap gap-3">
-          {["TRIMESTRE_1", "TRIMESTRE_2", "TRIMESTRE_3"].map(period => {
-            const checkClosed = sections.length > 0 && closedPeriods.has(`00000000-0000-0000-0000-000000000030:${period}`);
+          {["TRIMESTRE_1", "TRIMESTRE_2", "TRIMESTRE_3"].map((period) => {
+            const checkClosed = closedPeriods.has(period);
             return (
               <Button
                 key={period}
                 variant={checkClosed ? "default" : "outline"}
-                onClick={() => togglePeriodClose("00000000-0000-0000-0000-000000000030", period, !checkClosed)}
+                onClick={() => togglePeriodClose(period, !checkClosed)}
+                disabled={toggling === period}
                 className="gap-2"
               >
-                {checkClosed ? <Lock className="h-4 w-4" /> : <Unlock className="h-4 w-4" />}
+                {toggling === period ? <Loader2 className="h-4 w-4 animate-spin" /> : checkClosed ? <Lock className="h-4 w-4" /> : <Unlock className="h-4 w-4" />}
                 {period.replace("_", " ")}
               </Button>
             );
@@ -146,7 +166,9 @@ export function ReportsView({
               <tbody>
                 {students.map(st => (
                   <tr key={st.id} className="border-b last:border-0 hover:bg-slate-50">
-                    <td className="py-3 font-medium text-slate-900 text-sm">{st.name}</td>
+                    <td className="py-3 font-medium text-slate-900 text-sm">
+                      <Link href={`/dashboard/reports/${st.id}`} className="text-[#2563EB] hover:underline">{st.name}</Link>
+                    </td>
                     {st.items.map(it => (
                       <td key={it.name} className="py-3 text-center text-sm">
                         {it.score !== null ? <span className={it.score >= 5 ? "text-slate-700" : "text-red-600"}>{it.score}</span> : <span className="text-slate-300">—</span>}

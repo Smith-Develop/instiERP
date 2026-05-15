@@ -72,6 +72,30 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "No hay notas para guardar" }, { status: 400 });
     }
 
+    // Check for closed periods — block if any grade_item's period is closed
+    const gradeItemIds = grades.map((g) => g.gradeItemId);
+    const items = await db.grade_items.findMany({
+      where: { id: { in: gradeItemIds }, deleted_at: null },
+    });
+
+    if (items.length > 0) {
+      const periodsToCheck = [...new Set(items.map((i) => ({ grade_id: i.grade_id, period: i.period })))];
+      const closedPeriods = await db.closed_periods.findMany({
+        where: {
+          OR: periodsToCheck.map((p) => ({
+            grade_id: p.grade_id,
+            period: p.period,
+            is_closed: true,
+          })),
+        },
+      });
+
+      if (closedPeriods.length > 0) {
+        const closedNames = closedPeriods.map((c) => c.period.replace("_", " ")).join(", ");
+        return NextResponse.json({ error: `Periodo cerrado: ${closedNames}. No se pueden modificar las notas.` }, { status: 403 });
+      }
+    }
+
     const results = await Promise.all(
       grades.map(async (grade) => {
         if (grade.gradeId) {

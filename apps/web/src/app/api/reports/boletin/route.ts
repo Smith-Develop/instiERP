@@ -1,19 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@insti/database";
-import { getApiContext } from "@/lib/api-context";
+import { getApiContext, requireReportsRole } from "@/lib/api-context";
 import { generateBoletinPDF } from "@/modules/reports/boletin-pdf";
 
 export async function POST(request: NextRequest) {
   try {
     const ctx = await getApiContext();
-    const { sectionId } = await request.json();
+    requireReportsRole(ctx);
 
+    const { sectionId } = await request.json();
     if (!sectionId) {
       return NextResponse.json({ error: "sectionId requerido" }, { status: 400 });
     }
 
     const section = await db.sections.findUnique({
-      where: { id: sectionId },
+      where: { id: sectionId, school_id: ctx.schoolId, deleted_at: null },
       include: { grade: true },
     });
     if (!section) return NextResponse.json({ error: "Sección no encontrada" }, { status: 404 });
@@ -21,16 +22,16 @@ export async function POST(request: NextRequest) {
     const school = await db.schools.findUnique({ where: { id: ctx.schoolId } });
 
     const academicYear = await db.academic_years.findFirst({
-      where: { school_id: ctx.schoolId, is_active: true },
+      where: { id: ctx.academicYearId, school_id: ctx.schoolId },
     });
 
     const enrollments = await db.enrollments.findMany({
-      where: { section_id: sectionId, academic_year_id: academicYear?.id, deleted_at: null, is_active: true },
+      where: { section_id: sectionId, school_id: ctx.schoolId, deleted_at: null, is_active: true },
       include: { student: true, grade: true, section: true },
     });
 
     const gradeItems = await db.grade_items.findMany({
-      where: { grade_id: section.grade_id, deleted_at: null },
+      where: { grade_id: section.grade_id, school_id: ctx.schoolId, deleted_at: null },
       orderBy: { name: "asc" },
     });
 
@@ -46,7 +47,7 @@ export async function POST(request: NextRequest) {
     const doc = generateBoletinPDF(
       `${section.grade.name} ${section.name}`,
       school?.name ?? "Colegio",
-      academicYear?.year_label ?? "—",
+      academicYear?.year_label ?? ctx.academicYearId,
       enrollments,
       gradeItems,
       allGrades,
@@ -54,7 +55,6 @@ export async function POST(request: NextRequest) {
 
     const chunks: Buffer[] = [];
     doc.on("data", (chunk: Buffer) => chunks.push(chunk));
-
     const pdfBuffer = await new Promise<Buffer>((resolve) => {
       doc.on("end", () => resolve(Buffer.concat(chunks)));
     });
@@ -67,6 +67,7 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Error";
-    return NextResponse.json({ error: message }, { status: 500 });
+    const status = error instanceof Error && error.message.includes("No autorizado") ? 403 : 500;
+    return NextResponse.json({ error: message }, { status });
   }
 }

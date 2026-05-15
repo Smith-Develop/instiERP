@@ -5,11 +5,12 @@ import { db } from "@insti/database";
 export interface ApiContext {
   userId: string;
   schoolId: string;
+  academicYearId: string;
   role: string;
 }
 
 /**
- * Obtiene el school_id del usuario autenticado desde la sesión.
+ * Obtiene el school_id y academic_year_id del usuario autenticado desde la sesión.
  * Usa fallback de desarrollo si no hay sesión.
  */
 export async function getApiContext(): Promise<ApiContext> {
@@ -40,10 +41,16 @@ export async function getApiContext(): Promise<ApiContext> {
       throw new Error("User has no school");
     }
 
+    // Get active academic year
+    const academicYear = await db.academic_years.findFirst({
+      where: { school_id: userSchool.school_id, is_active: true, deleted_at: null },
+    });
+
     return {
       userId: session.user.id,
       schoolId: userSchool.school_id,
       role: userSchool.role,
+      academicYearId: academicYear?.id ?? "00000000-0000-0000-0000-000000000002",
     };
   } catch {
     // Development fallback
@@ -51,6 +58,20 @@ export async function getApiContext(): Promise<ApiContext> {
       userId: "dev-user",
       schoolId: "00000000-0000-0000-0000-000000000001",
       role: "SUPER_ADMIN",
+      academicYearId: "00000000-0000-0000-0000-000000000002",
     };
   }
+}
+
+/** Roles autorizados para operaciones de reports */
+export function requireRole(ctx: ApiContext, allowed: string[]) {
+  if (!allowed.includes(ctx.role)) {
+    throw new Error("No autorizado: rol insuficiente");
+  }
+}
+
+const REPORT_ROLES = ["SUPER_ADMIN", "DIRECTOR", "SECRETARIA"];
+
+export function requireReportsRole(ctx: ApiContext) {
+  requireRole(ctx, REPORT_ROLES);
 }

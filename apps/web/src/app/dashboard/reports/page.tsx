@@ -40,5 +40,5 @@ export default async function ReportsPage() {
     }
   }
 
-  return <ReportsView sections={sections.map(s => ({ id: s.id, label: `${s.grade.name} ${s.name}` }))} firstSection={firstSection?.id ?? null} students={students} />;
+  return <ReportsView sections={sections.map(s => ({ id: s.id, label: `${s.grade.name} ${s.name}`, gradeId: s.grade_id }))} firstSection={firstSection?.id ?? null} students={students} />;
 }
