@@ -101,9 +101,52 @@ export async function POST(request: NextRequest) {
       ),
     );
 
+    // Notify parents of absences
+    notifyAbsences(attendances).catch(() => {});
+
     return NextResponse.json({ success: true, count: results.length });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Error al guardar";
     return NextResponse.json({ error: message }, { status: 500 });
+  }
+}
+
+/** Crea notificaciones para ausencias nuevas */
+async function notifyAbsences(
+  attendances: { studentId: string; status: string }[],
+) {
+  const automaticNotifStatuses = ["AUSENTE", "TARDANZA"];
+  const toNotify = attendances.filter((a) => automaticNotifStatuses.includes(a.status));
+
+  if (toNotify.length === 0) return;
+
+  const students = await db.students.findMany({
+    where: { id: { in: toNotify.map((a) => a.studentId) } },
+    select: { id: true, first_name: true, last_name: true },
+  });
+
+  const guardians = await db.student_guardians.findMany({
+    where: { student_id: { in: toNotify.map((a) => a.studentId) }, deleted_at: null },
+    include: { guardian: { select: { user_id: true } } },
+  });
+
+  const studentMap = new Map(students.map((s) => [s.id, s]));
+  const notifs = guardians
+    .filter((g) => g.guardian.user_id)
+    .map((g) => {
+      const student = studentMap.get(g.student_id);
+      const statusRecord = toNotify.find((a) => a.studentId === g.student_id);
+      const statusLabel = statusRecord?.status === "TARDANZA" ? "llegó tarde" : "está ausente";
+      return {
+        user_id: g.guardian.user_id!,
+        title: `Asistencia: ${student?.first_name ?? "Estudiante"} ${student?.last_name ?? ""}`,
+        content: `${student?.first_name ?? "Tu hijo/a"} ${statusLabel} hoy.`,
+        type: "INFO",
+        link: "/dashboard/attendance",
+      };
+    });
+
+  if (notifs.length > 0) {
+    await db.notifications.createMany({ data: notifs });
   }
 }

@@ -20,6 +20,7 @@ import {
   AlertTriangle,
 } from "lucide-react";
 import { getServerSession } from "@/lib/session";
+import { NotificationBell } from "@/modules/notifications/notification-bell";
 
 const navItems = [
   { href: "/dashboard", icon: LayoutDashboard, label: "Panel" },
@@ -32,6 +33,7 @@ const navItems = [
   { href: "/dashboard/attendance", icon: ClipboardCheck, label: "Asistencia" },
   { href: "/dashboard/grades", icon: BookOpen, label: "Calificaciones" },
   { href: "/dashboard/behavior", icon: AlertTriangle, label: "Conducta" },
+  { href: "/dashboard/messages", icon: MessageSquare, label: "Mensajes" },
   { href: "/dashboard/reports", icon: FileText, label: "Boletines" },
   { href: "/dashboard/communication", icon: MessageSquare, label: "Mensajes" },
   { href: "/dashboard/finance", icon: Banknote, label: "Finanzas" },
@@ -117,6 +119,7 @@ export default async function DashboardLayout({
                 : "Panel de control"}
             </h1>
           </div>
+          <NotificationBell />
           <Link
             href="/dashboard/settings"
             className="rounded-md p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-600"

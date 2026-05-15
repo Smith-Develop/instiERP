@@ -55,7 +55,7 @@ export async function getApiContext(): Promise<ApiContext> {
   } catch {
     // Development fallback
     return {
-      userId: "dev-user",
+      userId: "00000000-0000-0000-0000-000000000010",
       schoolId: "00000000-0000-0000-0000-000000000001",
       role: "SUPER_ADMIN",
       academicYearId: "00000000-0000-0000-0000-000000000002",

@@ -11,6 +11,7 @@ export interface SessionContext {
 
 const FALLBACK_SCHOOL = "00000000-0000-0000-0000-000000000001";
 const FALLBACK_ACADEMIC_YEAR = "00000000-0000-0000-0000-000000000002";
+const FALLBACK_USER = "00000000-0000-0000-0000-000000000010";
 
 /**
  * Obtiene el contexto de sesión (school, año lectivo) del usuario actual.
@@ -21,7 +22,7 @@ export async function getSessionContext(): Promise<SessionContext> {
 
   if (!session) {
     return {
-      userId: "anonymous",
+      userId: FALLBACK_USER,
       schoolId: FALLBACK_SCHOOL,
       schoolName: "Colegio Demo",
       academicYearId: FALLBACK_ACADEMIC_YEAR,
