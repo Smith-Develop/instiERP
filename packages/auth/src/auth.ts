@@ -1,5 +1,6 @@
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
+import { nextCookies } from "better-auth/next-js";
 import { db } from "@insti/database";
 import type { Role } from "./roles";
 
@@ -13,9 +14,10 @@ export const auth = betterAuth({
   },
   emailAndPassword: {
     enabled: true,
-    autoSignIn: false,
+    autoSignIn: true,
   },
   secret: process.env.BETTER_AUTH_SECRET,
+  plugins: [nextCookies()],
 });
 
 export type AuthUser = {
