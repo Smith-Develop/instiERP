@@ -15,6 +15,9 @@ import {
   Building2,
   UserPlus,
   LogOut,
+  UserRound,
+  Library,
+  AlertTriangle,
 } from "lucide-react";
 import { getServerSession } from "@/lib/session";
 
@@ -22,10 +25,13 @@ const navItems = [
   { href: "/dashboard", icon: LayoutDashboard, label: "Panel" },
   { href: "/dashboard/students", icon: Users, label: "Estudiantes" },
   { href: "/dashboard/teachers", icon: GraduationCap, label: "Profesores" },
+  { href: "/dashboard/guardians", icon: UserRound, label: "Tutores" },
   { href: "/dashboard/admissions", icon: UserPlus, label: "Admisiones" },
+  { href: "/dashboard/subjects", icon: Library, label: "Asignaturas" },
   { href: "/dashboard/academic", icon: Building2, label: "Académico" },
   { href: "/dashboard/attendance", icon: ClipboardCheck, label: "Asistencia" },
   { href: "/dashboard/grades", icon: BookOpen, label: "Calificaciones" },
+  { href: "/dashboard/behavior", icon: AlertTriangle, label: "Conducta" },
   { href: "/dashboard/reports", icon: FileText, label: "Boletines" },
   { href: "/dashboard/communication", icon: MessageSquare, label: "Mensajes" },
   { href: "/dashboard/finance", icon: Banknote, label: "Finanzas" },
