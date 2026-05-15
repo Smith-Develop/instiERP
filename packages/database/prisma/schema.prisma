@@ -724,3 +724,25 @@ model financial_movements {
   @@index([created_at])
   @@map("financial_movements")
 }
+
+// ============================ CIERRE DE PERIODOS ============================
+
+model closed_periods {
+  id               String   @id @default(uuid()) @db.Uuid
+  school_id        String   @db.Uuid
+  academic_year_id String   @db.Uuid
+  grade_id         String   @db.Uuid
+  section_id       String?  @db.Uuid
+  period           String   @default("TRIMESTRE_1")
+  is_closed        Boolean  @default(true)
+  closed_by        String?  @db.Uuid
+  closed_at        DateTime @default(now())
+  created_at       DateTime @default(now())
+  updated_at       DateTime @updatedAt
+
+  @@unique([school_id, academic_year_id, grade_id, section_id, period])
+  @@index([school_id])
+  @@index([academic_year_id])
+  @@index([grade_id])
+  @@map("closed_periods")
+}
