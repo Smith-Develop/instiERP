@@ -255,6 +255,7 @@ model students {
   behavior_reports  behavior_reports[]
   invoices          invoices[]
   submissions       classroom_submissions[]
+  billing_plans     student_billing_plans[]
 
   @@index([school_id])
   @@index([document_number])
@@ -913,4 +914,46 @@ model audit_logs {
   @@index([user_id])
   @@index([action])
   @@map("audit_logs")
+}
+
+// ============================ FACTURACIÓN RECURRENTE ============================
+
+model billing_plans {
+  id              String    @id @default(uuid()) @db.Uuid
+  school_id       String    @db.Uuid
+  name            String
+  amount          Decimal   @db.Decimal(10, 2)
+  currency        String    @default("EUR")
+  frequency       String    @default("MONTHLY")
+  due_day         Int       @default(1)
+  is_active       Boolean   @default(true)
+  created_at      DateTime  @default(now())
+  updated_at      DateTime  @updatedAt
+  deleted_at      DateTime?
+
+  student_plans student_billing_plans[]
+
+  @@index([school_id])
+  @@map("billing_plans")
+}
+
+model student_billing_plans {
+  id            String    @id @default(uuid()) @db.Uuid
+  plan_id       String    @db.Uuid
+  student_id    String    @db.Uuid
+  school_id     String    @db.Uuid
+  start_date    DateTime  @default(now())
+  end_date      DateTime?
+  is_active     Boolean   @default(true)
+  created_at    DateTime  @default(now())
+  updated_at    DateTime  @updatedAt
+  deleted_at    DateTime?
+
+  plan    billing_plans @relation(fields: [plan_id], references: [id])
+  student students      @relation(fields: [student_id], references: [id])
+
+  @@unique([plan_id, student_id])
+  @@index([school_id])
+  @@index([student_id])
+  @@map("student_billing_plans")
 }
