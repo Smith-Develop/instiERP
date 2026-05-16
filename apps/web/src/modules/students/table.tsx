@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@insti/ui";
 import { Input } from "@insti/ui";
 import { Search, Pencil, Trash2, ChevronLeft, ChevronRight } from "lucide-react";
@@ -31,7 +32,7 @@ export function StudentTable({
 }) {
   const router = useRouter();
   const [searchValue, setSearchValue] = useState(search);
-  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const queryClient = useQueryClient();
 
   function doSearch() {
     const params = new URLSearchParams();
@@ -46,11 +47,14 @@ export function StudentTable({
     router.push(`/dashboard/students?${params.toString()}`);
   }
 
-  async function handleDelete(id: string) {
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => { await fetch(`/api/students/${id}`, { method: "DELETE" }); },
+    onSuccess: () => { queryClient.invalidateQueries(); router.refresh(); },
+  });
+
+  function handleDelete(id: string) {
     if (!confirm("¿Eliminar este estudiante?")) return;
-    setDeletingId(id);
-    await fetch(`/api/students/${id}`, { method: "DELETE" });
-    router.refresh();
+    deleteMutation.mutate(id);
   }
 
   return (
@@ -112,7 +116,7 @@ export function StudentTable({
                         </a>
                         <button
                           onClick={() => handleDelete(student.id)}
-                          disabled={deletingId === student.id}
+                          disabled={deleteMutation.isPending && deleteMutation.variables === student.id}
                           className="inline-flex items-center rounded-md p-1.5 text-slate-400 hover:bg-red-50 hover:text-red-600 disabled:opacity-50"
                           title="Eliminar"
                         >

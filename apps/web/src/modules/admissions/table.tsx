@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Pencil, Trash2 } from "lucide-react";
 
 type Admission = {
@@ -15,13 +15,16 @@ type Admission = {
 
 export function AdmissionTable({ admissions }: { admissions: Admission[] }) {
   const router = useRouter();
-  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const queryClient = useQueryClient();
 
-  async function handleDelete(id: string) {
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => { await fetch(`/api/admissions/${id}`, { method: "DELETE" }); },
+    onSuccess: () => { queryClient.invalidateQueries(); router.refresh(); },
+  });
+
+  function handleDelete(id: string) {
     if (!confirm("¿Eliminar esta admisión?")) return;
-    setDeletingId(id);
-    await fetch(`/api/admissions/${id}`, { method: "DELETE" });
-    router.refresh();
+    deleteMutation.mutate(id);
   }
 
   return (
@@ -63,7 +66,7 @@ export function AdmissionTable({ admissions }: { admissions: Admission[] }) {
                     </a>
                     <button
                       onClick={() => handleDelete(a.id)}
-                      disabled={deletingId === a.id}
+                      disabled={deleteMutation.isPending && deleteMutation.variables === a.id}
                       className="inline-flex items-center rounded-md p-1.5 text-slate-400 hover:bg-red-50 hover:text-red-600 disabled:opacity-50"
                       title="Eliminar"
                     >

@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Pencil, Trash2 } from "lucide-react";
 
 type Teacher = {
@@ -19,13 +19,16 @@ type Teacher = {
 
 export function TeacherTable({ teachers }: { teachers: Teacher[] }) {
   const router = useRouter();
-  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const queryClient = useQueryClient();
 
-  async function handleDelete(id: string) {
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => { await fetch(`/api/teachers/${id}`, { method: "DELETE" }); },
+    onSuccess: () => { queryClient.invalidateQueries(); router.refresh(); },
+  });
+
+  function handleDelete(id: string) {
     if (!confirm("¿Eliminar este profesor?")) return;
-    setDeletingId(id);
-    await fetch(`/api/teachers/${id}`, { method: "DELETE" });
-    router.refresh();
+    deleteMutation.mutate(id);
   }
 
   return (
@@ -67,7 +70,7 @@ export function TeacherTable({ teachers }: { teachers: Teacher[] }) {
                     </a>
                     <button
                       onClick={() => handleDelete(teacher.id)}
-                      disabled={deletingId === teacher.id}
+                      disabled={deleteMutation.isPending && deleteMutation.variables === teacher.id}
                       className="inline-flex items-center rounded-md p-1.5 text-slate-400 hover:bg-red-50 hover:text-red-600 disabled:opacity-50"
                       title="Eliminar"
                     >
