@@ -25,6 +25,26 @@ export async function POST(request: NextRequest) {
       },
     });
 
+    // Notify parent if student has guardians
+    const guardians = await db.student_guardians.findMany({
+      where: { student_id: body.student_id, deleted_at: null },
+      include: { guardian: { select: { user_id: true } } },
+    });
+    const studentName = await db.students.findUnique({ where: { id: body.student_id }, select: { first_name: true } });
+    for (const g of guardians) {
+      if (g.guardian.user_id) {
+        await db.notifications.create({
+          data: {
+            user_id: g.guardian.user_id,
+            title: `Nuevo reporte: ${body.type ?? "Observación"}`,
+            content: `${studentName?.first_name ?? "Estudiante"}: ${body.description.slice(0, 150)}`,
+            type: body.severity === "GRAVE" ? "WARNING" : "INFO",
+            link: "/dashboard/behavior",
+          },
+        }).catch(() => {});
+      }
+    }
+
     return NextResponse.json({ success: true, data: report }, { status: 201 });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Error";

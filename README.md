@@ -30,22 +30,23 @@ ERP escolar moderno, multi-tenant y multi-año. Diseñado para colegios, institu
 | **Pagos** | Stripe Checkout + MercadoPago, webhooks, configuración por colegio | `/api/payments/stripe/*`, `/mercadopago/*` | PayButton en finanzas |
 | **Documentos** | Subida a Supabase Storage, lista, descarga, soft delete | `GET/POST /api/documents`, `DELETE [id]` | Upload en estudiante/admisión, lista global |
 | **Asignaciones** | Profesor → materia → sección | `GET/POST /api/assignments`, `DELETE [id]` | Crear, lista, eliminar |
+| **Horarios** | Clases por día, hora, aula, grid semanal | `GET/POST /api/schedules`, `DELETE [id]` | Grid L-V con horas, añadir/eliminar |
 | **Configuración** | Perfil colegio, pagos (moneda, país, provider, API keys), años lectivos | `GET/PUT /api/schools` | Formulario completo |
 | **Dashboards por rol** | Director (KPIs+asistencia), Secretaria (admisiones+pagos), Profesor (horario+secciones), Padre (hijos+facturas), Estudiante (notas+eventos) | — | 5 dashboards especializados |
+| **Audit logs** | Trazabilidad de acciones (CREATE, DELETE, UPDATE) con detalles e IP | — | Log automático en API routes |
+| **Morosidad** | Dashboard de facturas vencidas con alertas | — | Banner rojo en finanzas con detalle |
+| **Docker** | Dockerfile multi-stage + docker-compose con PostgreSQL | — | `docker compose up` |
 
 ### 🔜 Próximamente
 
 | Módulo | Descripción |
 |---|---|
-| **Horarios** | Gestión de horarios de clase (día, hora, aula). API + UI |
-| **Notificaciones ampliadas** | Auto-notificar en calificaciones, conducta, mensajes y pagos |
-| **Audit logs** | Trazabilidad de acciones sensibles (quién, qué, cuándo) |
-| **Morosidad** | Dashboard de facturas vencidas, alertas |
+| **Notificaciones ampliadas** | Auto-notificar en pagos y mensajes |
 | **Analytics** | Gráficos de rendimiento, asistencia, finanzas (Recharts) |
 | **IA** | Predicción de riesgo académico |
 | **Email (Resend)** | Recuperación de contraseña, notificaciones por email |
-| **Testing** | Más tests unitarios + integración + E2E |
-| **Docker** | Dockerfile + docker-compose para despliegue |
+| **Testing ampliado** | Más tests unitarios + integración |
+| **Facturación recurrente** | Mensualidades automáticas |
 
 ---
 
@@ -148,6 +149,6 @@ pnpm db:studio     # Prisma Studio
 ## 📊 Stats
 
 ```
-69 páginas | 51 API routes | 35+ modelos DB | 30+ permisos RBAC
-11 unit tests | 4 E2E tests | ~15,000 líneas de código
+75 páginas | 56 API routes | 37+ modelos DB | 30+ permisos RBAC
+11 unit tests | 4 E2E tests | ~17,000 líneas de código
 ```

@@ -3,6 +3,7 @@ import { db } from "@insti/database";
 import { studentSchema } from "@/modules/students/schemas";
 import { getApiContext, guard } from "@/lib/api-context";
 import { PERMISSIONS } from "@insti/auth";
+import { auditLog } from "@/lib/audit";
 
 // GET /api/students — list
 export async function GET(request: NextRequest) {
@@ -63,6 +64,7 @@ export async function POST(request: NextRequest) {
       },
     });
 
+    auditLog(ctx.schoolId, ctx.userId, "CREATE", "student", student.id).catch(() => {});
     return NextResponse.json({ success: true, data: student }, { status: 201 });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Error al crear";

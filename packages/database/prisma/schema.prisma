@@ -895,3 +895,22 @@ model post_comments {
   @@index([post_id])
   @@map("post_comments")
 }
+
+// ============================ AUDITORÍA ============================
+
+model audit_logs {
+  id          String   @id @default(uuid()) @db.Uuid
+  school_id   String   @db.Uuid
+  user_id     String?  @db.Uuid
+  action      String
+  entity      String
+  entity_id   String?
+  details     Json?
+  ip_address  String?
+  created_at  DateTime @default(now())
+
+  @@index([school_id, created_at])
+  @@index([user_id])
+  @@index([action])
+  @@map("audit_logs")
+}
