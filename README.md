@@ -37,16 +37,16 @@ ERP escolar moderno, multi-tenant y multi-año. Diseñado para colegios, institu
 | **Morosidad** | Dashboard de facturas vencidas con alertas | — | Banner rojo en finanzas con detalle |
 | **Docker** | Dockerfile multi-stage + docker-compose con PostgreSQL | — | `docker compose up` |
 | **Facturación recurrente** | Planes de cobro automáticos (mensual, trimestral, anual) con generación masiva | `GET/POST /api/billing/plans`, `POST /api/billing/generate` | Planes, generar facturas |
+| **Analytics** | Dashboard con gráficos (Recharts): estudiantes por grado, asistencia 7d, finanzas 6m, rendimiento por grado, KPIs | — | Gráficos interactivos |
 
 ### 🔜 Próximamente
 
 | Módulo | Descripción |
 |---|---|
-| **Notificaciones ampliadas** | Auto-notificar en pagos y mensajes |
-| **Analytics** | Gráficos de rendimiento, asistencia, finanzas (Recharts) |
 | **IA** | Predicción de riesgo académico |
 | **Email (Resend)** | Recuperación de contraseña, notificaciones por email |
-| **Testing ampliado** | Más tests unitarios + integración |
+| **Testing ampliado** | Más tests de integración |
+| **ESLint config** | Reglas de linting explícitas |
 
 ---
 
@@ -149,6 +149,6 @@ pnpm db:studio     # Prisma Studio
 ## 📊 Stats
 
 ```
-74 páginas | 59 API routes | 39+ modelos DB | 30+ permisos RBAC
-21 unit tests | 9 E2E tests | ~18,000 líneas de código
+75 páginas | 59 API routes | 39+ modelos DB | 30+ permisos RBAC
+20 unit tests | 9 E2E tests | ~18,500 líneas de código
 ```
