@@ -9,6 +9,7 @@ import { Button, Input, Label } from "@insti/ui";
 import { ArrowLeft, Loader2, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { z } from "zod";
+import { DocumentList } from "@/modules/documents/document-list";
 
 const editStudentSchema = z.object({
   first_name: z.string().min(1, "Requerido"),
@@ -106,6 +107,7 @@ export default function EditStudentPage() {
           </CardFooter>
         </form>
       </Card>
+      <DocumentList entityType="student" entityId={id} />
     </div>
   );
 }

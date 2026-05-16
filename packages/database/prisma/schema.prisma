@@ -752,3 +752,25 @@ model closed_periods {
   @@index([grade_id])
   @@map("closed_periods")
 }
+
+// ============================ DOCUMENTOS ============================
+
+model documents {
+  id            String    @id @default(uuid()) @db.Uuid
+  school_id     String    @db.Uuid
+  entity_type   String
+  entity_id     String    @db.Uuid
+  filename      String
+  original_name String
+  mime_type     String
+  size_bytes    Int
+  url           String
+  uploaded_by   String?   @db.Uuid
+  created_at    DateTime  @default(now())
+  updated_at    DateTime  @updatedAt
+  deleted_at    DateTime?
+
+  @@index([school_id])
+  @@index([entity_type, entity_id])
+  @@map("documents")
+}

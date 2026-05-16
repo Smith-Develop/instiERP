@@ -9,6 +9,7 @@ import { Button, Input, Label } from "@insti/ui";
 import { ArrowLeft, Loader2, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { z } from "zod";
+import { DocumentList } from "@/modules/documents/document-list";
 
 const schema = z.object({
   first_name: z.string().min(1, "Requerido"),
@@ -53,6 +54,7 @@ export default function EditAdmissionPage() {
         <div className="space-y-2"><Label>Notas</Label><Input {...register("notes")}/></div>
         {errors.root && <div className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">{errors.root.message}</div>}
       </CardContent><CardFooter className="flex gap-3 border-t pt-6"><Link href="/dashboard/admissions"><Button type="button" variant="outline">Cancelar</Button></Link><Button type="submit" disabled={isSubmitting}>{isSubmitting ? "Guardando..." : "Guardar"}</Button></CardFooter></form></Card>
+      <DocumentList entityType="admission" entityId={id} />
     </div>
   );
 }

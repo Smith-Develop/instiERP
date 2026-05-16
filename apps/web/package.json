@@ -17,6 +17,7 @@
     "@insti/types": "workspace:*",
     "@insti/ui": "workspace:*",
     "@insti/utils": "workspace:*",
+    "@supabase/supabase-js": "^2.105.4",
     "@tanstack/react-query": "^5.62.0",
     "better-auth": "^1.6.11",
     "framer-motion": "^11.0.0",
