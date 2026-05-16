@@ -21,6 +21,7 @@ export async function getSessionContext(): Promise<SessionContext> {
   const session = await getServerSession();
 
   if (!session) {
+    // Fallback for dev + build time; middleware enforces auth at runtime
     return {
       userId: FALLBACK_USER,
       schoolId: FALLBACK_SCHOOL,

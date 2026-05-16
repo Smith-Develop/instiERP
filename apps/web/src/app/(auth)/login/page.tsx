@@ -83,9 +83,11 @@ export default function LoginPage() {
           </Button>
         </form>
       </CardContent>
-      <CardFooter className="text-center text-sm text-slate-500">
-        admin@insti.dev / admin123
-      </CardFooter>
+      {process.env.NODE_ENV !== "production" && (
+        <CardFooter className="text-center text-xs text-slate-400">
+          Demo: admin@insti.dev / admin123
+        </CardFooter>
+      )}
     </Card>
   );
 }

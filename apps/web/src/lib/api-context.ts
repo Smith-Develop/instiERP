@@ -57,7 +57,7 @@ export async function getApiContext(): Promise<ApiContext> {
       academicYearId: academicYear?.id ?? "00000000-0000-0000-0000-000000000002",
     };
   } catch {
-    // Development fallback
+    // Fallback for dev + build time; middleware + guard() enforce auth at runtime
     return {
       userId: FALLBACK_USER,
       schoolId: FALLBACK_SCHOOL,
