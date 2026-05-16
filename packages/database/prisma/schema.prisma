@@ -957,3 +957,62 @@ model student_billing_plans {
   @@index([student_id])
   @@map("student_billing_plans")
 }
+
+// ============================ INTELIGENCIA ARTIFICIAL ============================
+
+model ai_providers {
+  id         String   @id @default(uuid()) @db.Uuid
+  name       String   @unique
+  api_key    String
+  base_url   String?
+  models     Json
+  is_default Boolean  @default(false)
+  is_active  Boolean  @default(true)
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  configurations ai_configurations[]
+
+  @@map("ai_providers")
+}
+
+model ai_configurations {
+  id                   String   @id @default(uuid()) @db.Uuid
+  school_id            String   @unique @db.Uuid
+  provider_id          String   @db.Uuid
+  model                String
+  system_prompt        String?
+  risk_threshold       Decimal  @default(0.70) @db.Decimal(3, 2)
+  max_tokens_per_month Int      @default(100000)
+  tokens_used          Int      @default(0)
+  last_reset_at        DateTime @default(now())
+  features             Json
+  chat_data_access     Boolean  @default(false)
+  is_active            Boolean  @default(true)
+  created_at           DateTime @default(now())
+  updated_at           DateTime @updatedAt
+
+  provider ai_providers @relation(fields: [provider_id], references: [id])
+
+  @@index([school_id])
+  @@map("ai_configurations")
+}
+
+model ai_logs {
+  id          String    @id @default(uuid()) @db.Uuid
+  school_id   String    @db.Uuid
+  entity_type String
+  entity_id   String    @db.Uuid
+  provider    String
+  model       String
+  feature     String
+  prompt      String
+  response    String
+  tokens_used Int?
+  cost        Decimal?  @db.Decimal(10, 5)
+  created_at  DateTime  @default(now())
+
+  @@index([school_id, entity_id, created_at])
+  @@index([created_at])
+  @@map("ai_logs")
+}

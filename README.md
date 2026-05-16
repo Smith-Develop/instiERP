@@ -39,12 +39,12 @@ ERP escolar moderno, multi-tenant y multi-año. Diseñado para colegios, institu
 | **Facturación recurrente** | Planes de cobro automáticos (mensual, trimestral, anual) con generación masiva | `GET/POST /api/billing/plans`, `POST /api/billing/generate` | Planes, generar facturas |
 | **Analytics** | Dashboard con gráficos (Recharts): estudiantes por grado, asistencia 7d, finanzas 6m, rendimiento por grado, KPIs | — | Gráficos interactivos |
 | **Email (Resend)** | Recuperación de contraseña, envío de emails vía Resend | `POST /api/auth/forget-password` | Página forgot-password, enlace en login |
+| **IA Predictiva** | Predicción de riesgo académico con Gemini/DeepSeek, panel SUPER_ADMIN (proveedores + config por institución), límites de tokens, caché 24h | 5 endpoints `/api/ai/*` | Panel admin IA, predicciones en analytics |
 
 ### 🔜 Próximamente
 
 | Módulo | Descripción |
 |---|---|
-| **IA** | Predicción de riesgo académico |
 | **Testing ampliado** | Más tests de integración |
 | **ESLint config** | Reglas de linting explícitas |
 
@@ -149,6 +149,6 @@ pnpm db:studio     # Prisma Studio
 ## 📊 Stats
 
 ```
-76 páginas | 59 API routes | 39+ modelos DB | 30+ permisos RBAC
-20 unit tests | 9 E2E tests | ~19,000 líneas de código
+81 páginas | 64 API routes | 42+ modelos DB | 33+ permisos RBAC
+20 unit tests | 9 E2E tests | ~20,000 líneas de código
 ```
