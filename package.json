@@ -9,7 +9,9 @@
     "db:migrate": "pnpm --filter @insti/database db:migrate",
     "db:generate": "pnpm --filter @insti/database db:generate",
     "db:studio": "pnpm --filter @insti/database db:studio",
-    "db:push": "pnpm --filter @insti/database db:push"
+    "db:push": "pnpm --filter @insti/database db:push",
+    "test": "pnpm --filter @insti/web test",
+    "test:e2e": "pnpm --filter @insti/web test:e2e"
   },
   "devDependencies": {
     "turbo": "^2.5.0",
