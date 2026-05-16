@@ -87,17 +87,23 @@ model verification {
 // ============================ CORE ============================
 
 model schools {
-  id            String   @id @default(uuid()) @db.Uuid
-  name          String
-  slug          String   @unique
-  logo_url      String?
-  address       String?
-  phone         String?
-  email         String?
-  is_active     Boolean  @default(true)
-  created_at    DateTime @default(now())
-  updated_at    DateTime @updatedAt
-  deleted_at    DateTime?
+  id               String   @id @default(uuid()) @db.Uuid
+  name             String
+  slug             String   @unique
+  logo_url         String?
+  address          String?
+  phone            String?
+  email            String?
+  is_active        Boolean  @default(true)
+  currency         String   @default("eur")
+  country          String   @default("ES")
+  payment_provider String   @default("none")
+  stripe_secret    String?
+  stripe_public    String?
+  mp_access_token  String?
+  created_at       DateTime @default(now())
+  updated_at       DateTime @updatedAt
+  deleted_at       DateTime?
 
   academic_years    academic_years[]
   academic_levels   academic_levels[]
