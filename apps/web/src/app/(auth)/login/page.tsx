@@ -6,6 +6,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter }
 import { Button } from "@insti/ui";
 import { Input } from "@insti/ui";
 import { Label } from "@insti/ui";
+import Link from "next/link";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -82,6 +83,9 @@ export default function LoginPage() {
             {loading ? "Ingresando..." : "Iniciar sesión"}
           </Button>
         </form>
+        <div className="mt-4 text-center">
+          <Link href="/forgot-password" className="text-sm text-[#2563EB] hover:underline">¿Olvidaste tu contraseña?</Link>
+        </div>
       </CardContent>
       {process.env.NODE_ENV !== "production" && (
         <CardFooter className="text-center text-xs text-slate-400">

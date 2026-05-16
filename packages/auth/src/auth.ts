@@ -4,6 +4,16 @@ import { nextCookies } from "better-auth/next-js";
 import { db } from "@insti/database";
 import type { Role } from "./roles";
 
+async function sendResetPasswordEmail(email: string, url: string) {
+  // Dynamic import to avoid bundling Resend in auth package
+  try {
+    const { sendPasswordResetEmail } = await import("@/lib/email");
+    await sendPasswordResetEmail(email, url);
+  } catch {
+    // Email sending is best-effort; auth proceeds regardless
+  }
+}
+
 export const auth = betterAuth({
   database: prismaAdapter(db, {
     provider: "postgresql",
@@ -15,6 +25,9 @@ export const auth = betterAuth({
   emailAndPassword: {
     enabled: true,
     autoSignIn: true,
+    sendResetPassword: async ({ user, url }) => {
+      await sendResetPasswordEmail(user.email, url);
+    },
   },
   secret: process.env.BETTER_AUTH_SECRET,
   plugins: [nextCookies()],
