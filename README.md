@@ -150,5 +150,5 @@ pnpm db:studio     # Prisma Studio
 
 ```
 74 páginas | 59 API routes | 39+ modelos DB | 30+ permisos RBAC
-11 unit tests | 4 E2E tests | ~18,000 líneas de código
+21 unit tests | 9 E2E tests | ~18,000 líneas de código
 ```
