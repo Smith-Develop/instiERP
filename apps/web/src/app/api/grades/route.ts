@@ -1,6 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@insti/database";
 
+async function notifyGrade(studentId: string, score: number | null, gradeItemName: string) {
+  const student = await db.students.findUnique({ where: { id: studentId }, select: { first_name: true, user_id: true } });
+  if (!student?.user_id) return;
+  await db.notifications.create({
+    data: {
+      user_id: student.user_id,
+      title: `Nueva calificación: ${gradeItemName}`,
+      content: `${student.first_name} recibió ${score != null ? score.toFixed(1) : "—"} en ${gradeItemName}.`,
+      type: "INFO",
+      link: "/dashboard/grades",
+    },
+  }).catch(() => {});
+}
+
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
@@ -117,7 +131,16 @@ export async function POST(request: NextRequest) {
         }
         return null;
       }),
-    );
+);
+
+    // Notify students of new grades
+    const itemMap = new Map(items.map(i => [i.id, i]));
+    for (const g of grades) {
+      if (g.score !== null) {
+        const gi = itemMap.get(g.gradeItemId);
+        notifyGrade(g.studentId, g.score, gi?.name ?? "Criterio").catch(() => {});
+      }
+    }
 
     return NextResponse.json({
       success: true,
