@@ -33,13 +33,16 @@ export async function PUT(
     const admission = await db.admissions.update({
       where: { id },
       data: {
-        first_name: body.first_name,
-        last_name: body.last_name,
-        document_type: body.document_type,
-        document_number: body.document_number,
+        first_name: body.first_name, last_name: body.last_name,
+        document_type: body.document_type, document_number: body.document_number,
         birth_date: body.birth_date ? new Date(body.birth_date) : undefined,
-        notes: body.notes,
-        status: body.status,
+        gender: body.gender, address: body.address,
+        desired_grade_id: body.desired_grade_id,
+        guardian_name: body.guardian_name, guardian_relationship: body.guardian_relationship,
+        guardian_phone: body.guardian_phone, guardian_email: body.guardian_email,
+        medical_notes: body.medical_notes, emergency_contact: body.emergency_contact,
+        emergency_phone: body.emergency_phone,
+        notes: body.notes, status: body.status,
       },
     });
 

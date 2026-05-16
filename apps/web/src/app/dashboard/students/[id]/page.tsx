@@ -10,6 +10,7 @@ import { ArrowLeft, Loader2, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { z } from "zod";
 import { DocumentList } from "@/modules/documents/document-list";
+import { StudentGuardians } from "@/modules/guardians/student-guardians";
 
 const editStudentSchema = z.object({
   first_name: z.string().min(1, "Requerido"),
@@ -107,6 +108,7 @@ export default function EditStudentPage() {
           </CardFooter>
         </form>
       </Card>
+      <StudentGuardians studentId={id} />
       <DocumentList entityType="student" entityId={id} />
     </div>
   );

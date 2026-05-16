@@ -301,19 +301,28 @@ model student_guardians {
 }
 
 model admissions {
-  id              String    @id @default(uuid()) @db.Uuid
-  school_id       String    @db.Uuid
-  first_name      String
-  last_name       String
-  document_type   String?
-  document_number String?
-  birth_date      DateTime?
-  desired_grade_id String?  @db.Uuid
-  status          String    @default("PENDIENTE")
-  notes           String?
-  created_at      DateTime  @default(now())
-  updated_at      DateTime  @updatedAt
-  deleted_at      DateTime?
+  id                  String    @id @default(uuid()) @db.Uuid
+  school_id           String    @db.Uuid
+  first_name          String
+  last_name           String
+  document_type       String?
+  document_number     String?
+  birth_date          DateTime?
+  gender              String?
+  address             String?
+  desired_grade_id    String?  @db.Uuid
+  guardian_name       String?
+  guardian_relationship String?
+  guardian_phone      String?
+  guardian_email      String?
+  medical_notes       String?
+  emergency_contact   String?
+  emergency_phone     String?
+  status              String    @default("PENDIENTE")
+  notes               String?
+  created_at          DateTime  @default(now())
+  updated_at          DateTime  @updatedAt
+  deleted_at          DateTime?
 
   @@index([school_id])
   @@index([status])
