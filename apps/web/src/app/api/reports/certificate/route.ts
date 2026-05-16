@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@insti/database";
-import { getApiContext, requireReportsRole } from "@/lib/api-context";
+import { getApiContext, guard } from "@/lib/api-context";
+import { PERMISSIONS } from "@insti/auth";
 import { generateCertificatePDF } from "@/modules/reports/certificate-pdf";
 
 export async function POST(request: NextRequest) {
   try {
     const ctx = await getApiContext();
-    requireReportsRole(ctx);
+    guard(ctx, PERMISSIONS.CERTIFICATES_READ);
 
     const { studentId } = await request.json();
     if (!studentId) {

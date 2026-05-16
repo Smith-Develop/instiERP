@@ -1,9 +1,11 @@
 import { NextResponse } from "next/server";
 import { db } from "@insti/database";
-import { getApiContext } from "@/lib/api-context";
+import { getApiContext, guard } from "@/lib/api-context";
+import { PERMISSIONS } from "@insti/auth";
 
 export async function GET() {
   const ctx = await getApiContext();
+  guard(ctx, PERMISSIONS.USERS_READ);
 
   const userSchools = await db.user_schools.findMany({
     where: { school_id: ctx.schoolId, deleted_at: null, is_active: true },

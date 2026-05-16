@@ -21,23 +21,31 @@ import {
 } from "lucide-react";
 import { getServerSession } from "@/lib/session";
 import { NotificationBell } from "@/modules/notifications/notification-bell";
+import { hasPermission, PERMISSIONS, type Role } from "@insti/auth";
 
-const navItems = [
-  { href: "/dashboard", icon: LayoutDashboard, label: "Panel" },
-  { href: "/dashboard/students", icon: Users, label: "Estudiantes" },
-  { href: "/dashboard/teachers", icon: GraduationCap, label: "Profesores" },
-  { href: "/dashboard/guardians", icon: UserRound, label: "Tutores" },
-  { href: "/dashboard/admissions", icon: UserPlus, label: "Admisiones" },
-  { href: "/dashboard/subjects", icon: Library, label: "Asignaturas" },
-  { href: "/dashboard/academic", icon: Building2, label: "Académico" },
-  { href: "/dashboard/attendance", icon: ClipboardCheck, label: "Asistencia" },
-  { href: "/dashboard/grades", icon: BookOpen, label: "Calificaciones" },
-  { href: "/dashboard/behavior", icon: AlertTriangle, label: "Conducta" },
-  { href: "/dashboard/messages", icon: MessageSquare, label: "Mensajes" },
-  { href: "/dashboard/reports", icon: FileText, label: "Boletines" },
-  { href: "/dashboard/communication", icon: MessageSquare, label: "Mensajes" },
-  { href: "/dashboard/finance", icon: Banknote, label: "Finanzas" },
-  { href: "/dashboard/calendar", icon: Calendar, label: "Calendario" },
+interface NavItem {
+  href: string;
+  icon: React.ElementType;
+  label: string;
+  permission: string;
+}
+
+const allNavItems: NavItem[] = [
+  { href: "/dashboard", icon: LayoutDashboard, label: "Panel", permission: PERMISSIONS.STUDENTS_READ },
+  { href: "/dashboard/students", icon: Users, label: "Estudiantes", permission: PERMISSIONS.STUDENTS_READ },
+  { href: "/dashboard/teachers", icon: GraduationCap, label: "Profesores", permission: PERMISSIONS.TEACHERS_READ },
+  { href: "/dashboard/guardians", icon: UserRound, label: "Tutores", permission: PERMISSIONS.GUARDIANS_READ },
+  { href: "/dashboard/admissions", icon: UserPlus, label: "Admisiones", permission: PERMISSIONS.ADMISSIONS_READ },
+  { href: "/dashboard/subjects", icon: Library, label: "Asignaturas", permission: PERMISSIONS.SUBJECTS_READ },
+  { href: "/dashboard/academic", icon: Building2, label: "Académico", permission: PERMISSIONS.SETTINGS_READ },
+  { href: "/dashboard/attendance", icon: ClipboardCheck, label: "Asistencia", permission: PERMISSIONS.ATTENDANCE_READ },
+  { href: "/dashboard/grades", icon: BookOpen, label: "Calificaciones", permission: PERMISSIONS.GRADES_READ },
+  { href: "/dashboard/behavior", icon: AlertTriangle, label: "Conducta", permission: PERMISSIONS.BEHAVIOR_READ },
+  { href: "/dashboard/messages", icon: MessageSquare, label: "Mensajes", permission: PERMISSIONS.COMMUNICATION_READ },
+  { href: "/dashboard/reports", icon: FileText, label: "Boletines", permission: PERMISSIONS.REPORTS_READ },
+  { href: "/dashboard/communication", icon: MessageSquare, label: "Comunicación", permission: PERMISSIONS.COMMUNICATION_READ },
+  { href: "/dashboard/finance", icon: Banknote, label: "Finanzas", permission: PERMISSIONS.FINANCE_READ },
+  { href: "/dashboard/calendar", icon: Calendar, label: "Calendario", permission: PERMISSIONS.SCHEDULE_READ },
 ];
 
 export default async function DashboardLayout({
@@ -46,6 +54,12 @@ export default async function DashboardLayout({
   children: React.ReactNode;
 }) {
   const session = await getServerSession();
+  const role = (session?.user.role ?? "SUPER_ADMIN") as Role;
+
+  const navItems = allNavItems.filter((item) =>
+    hasPermission(role, item.permission),
+  );
+
   const initials = session?.user.name
     ?.split(" ")
     .map((n) => n[0])
@@ -94,7 +108,7 @@ export default async function DashboardLayout({
                 {session?.user.name ?? "Invitado"}
               </p>
               <p className="text-xs text-white/60 truncate">
-                {session?.user.email ?? ""}
+                {session?.user.email ?? ""} · {role}
               </p>
             </div>
             <a

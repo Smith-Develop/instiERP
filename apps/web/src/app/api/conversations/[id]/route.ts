@@ -1,12 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@insti/database";
-import { getApiContext } from "@/lib/api-context";
+import { getApiContext, guard } from "@/lib/api-context";
+import { PERMISSIONS } from "@insti/auth";
 
 export async function GET(
   _req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
   const ctx = await getApiContext();
+  guard(ctx, PERMISSIONS.COMMUNICATION_READ);
   const { id } = await params;
 
   const conversation = await db.conversations.findFirst({

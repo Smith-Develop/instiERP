@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@insti/database";
-import { getApiContext, requireReportsRole } from "@/lib/api-context";
+import { getApiContext, guard } from "@/lib/api-context";
+import { PERMISSIONS } from "@insti/auth";
 import { generateBoletinPDF } from "@/modules/reports/boletin-pdf";
 
 export async function POST(request: NextRequest) {
   try {
     const ctx = await getApiContext();
-    requireReportsRole(ctx);
+    guard(ctx, PERMISSIONS.REPORTS_READ);
 
     const { sectionId } = await request.json();
     if (!sectionId) {

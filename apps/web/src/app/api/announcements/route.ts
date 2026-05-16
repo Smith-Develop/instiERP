@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@insti/database";
-import { getApiContext } from "@/lib/api-context";
+import { getApiContext, guard } from "@/lib/api-context";
+import { PERMISSIONS } from "@insti/auth";
 
 export async function GET() {
   const ctx = await getApiContext();
+  guard(ctx, PERMISSIONS.COMMUNICATION_READ);
   const items = await db.announcements.findMany({
     where: { school_id: ctx.schoolId, deleted_at: null },
     orderBy: { created_at: "desc" },
@@ -14,6 +16,7 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   const ctx = await getApiContext();
+  guard(ctx, PERMISSIONS.COMMUNICATION_WRITE);
   const body = await request.json();
   if (!body.title || !body.content) return NextResponse.json({ success: false, error: "Título y contenido requeridos" }, { status: 400 });
   const announcement = await db.announcements.create({

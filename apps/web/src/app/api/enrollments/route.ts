@@ -1,10 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@insti/database";
-import { getApiContext } from "@/lib/api-context";
+import { getApiContext, guard } from "@/lib/api-context";
+import { PERMISSIONS } from "@insti/auth";
 
 export async function POST(request: NextRequest) {
   try {
     const ctx = await getApiContext();
+    guard(ctx, PERMISSIONS.ENROLLMENTS_WRITE);
     const body = await request.json();
     const { student_id, grade_id, section_id, academic_year_id } = body;
 

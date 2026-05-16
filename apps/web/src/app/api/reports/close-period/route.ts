@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@insti/database";
-import { getApiContext, requireReportsRole } from "@/lib/api-context";
+import { getApiContext, guard } from "@/lib/api-context";
+import { PERMISSIONS } from "@insti/auth";
 
 export async function POST(request: NextRequest) {
   try {
     const ctx = await getApiContext();
-    requireReportsRole(ctx);
+    guard(ctx, PERMISSIONS.SETTINGS_WRITE);
 
     const { gradeId, sectionId, period, close } = await request.json();
     if (!gradeId || !period) {
@@ -55,7 +56,7 @@ export async function POST(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   const ctx = await getApiContext();
-  requireReportsRole(ctx);
+  guard(ctx, PERMISSIONS.SETTINGS_READ);
   const { searchParams } = new URL(request.url);
   const gradeId = searchParams.get("gradeId");
 

@@ -1,12 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@insti/database";
 import { studentSchema } from "@/modules/students/schemas";
-import { getApiContext } from "@/lib/api-context";
+import { getApiContext, guard } from "@/lib/api-context";
+import { PERMISSIONS } from "@insti/auth";
 
 // GET /api/students — list
 export async function GET(request: NextRequest) {
   try {
     const ctx = await getApiContext();
+    guard(ctx, PERMISSIONS.STUDENTS_READ);
     const { searchParams } = new URL(request.url);
     const page = Math.max(1, Number(searchParams.get("page")) || 1);
     const pageSize = Math.min(100, Math.max(1, Number(searchParams.get("pageSize")) || 20));
@@ -49,6 +51,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const ctx = await getApiContext();
+    guard(ctx, PERMISSIONS.STUDENTS_WRITE);
     const body = await request.json();
     const parsed = studentSchema.parse(body);
 

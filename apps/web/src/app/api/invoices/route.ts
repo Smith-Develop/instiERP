@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@insti/database";
-import { getApiContext } from "@/lib/api-context";
+import { getApiContext, guard } from "@/lib/api-context";
+import { PERMISSIONS } from "@insti/auth";
 
 export async function GET() {
   const ctx = await getApiContext();
+  guard(ctx, PERMISSIONS.FINANCE_READ);
   const items = await db.invoices.findMany({
     where: { school_id: ctx.schoolId, deleted_at: null },
     include: { student: { select: { first_name: true, last_name: true } } },
@@ -15,6 +17,7 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   const ctx = await getApiContext();
+  guard(ctx, PERMISSIONS.FINANCE_WRITE);
   const body = await request.json();
   if (!body.student_id || !body.concept || !body.amount) return NextResponse.json({ success: false, error: "Datos incompletos" }, { status: 400 });
   const invoice = await db.invoices.create({

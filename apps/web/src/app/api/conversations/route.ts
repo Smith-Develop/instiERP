@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@insti/database";
-import { getApiContext } from "@/lib/api-context";
+import { getApiContext, guard } from "@/lib/api-context";
+import { PERMISSIONS } from "@insti/auth";
 
 export async function GET() {
   const ctx = await getApiContext();
+  guard(ctx, PERMISSIONS.COMMUNICATION_READ);
   const conversations = await db.conversations.findMany({
     where: {
       school_id: ctx.schoolId,
@@ -31,6 +33,7 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const ctx = await getApiContext();
+    guard(ctx, PERMISSIONS.COMMUNICATION_WRITE);
     const { participantIds, title, initialMessage } = await request.json();
 
     if (!participantIds?.length) {

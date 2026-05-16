@@ -1,5 +1,5 @@
 import { cookies } from "next/headers";
-import { auth } from "@insti/auth";
+import { auth, requirePermission } from "@insti/auth";
 import { db } from "@insti/database";
 
 export interface ApiContext {
@@ -8,6 +8,10 @@ export interface ApiContext {
   academicYearId: string;
   role: string;
 }
+
+const FALLBACK_SCHOOL = "00000000-0000-0000-0000-000000000001";
+const FALLBACK_ACADEMIC_YEAR = "00000000-0000-0000-0000-000000000002";
+const FALLBACK_USER = "00000000-0000-0000-0000-000000000010";
 
 /**
  * Obtiene el school_id y academic_year_id del usuario autenticado desde la sesión.
@@ -55,23 +59,19 @@ export async function getApiContext(): Promise<ApiContext> {
   } catch {
     // Development fallback
     return {
-      userId: "00000000-0000-0000-0000-000000000010",
-      schoolId: "00000000-0000-0000-0000-000000000001",
+      userId: FALLBACK_USER,
+      schoolId: FALLBACK_SCHOOL,
       role: "SUPER_ADMIN",
-      academicYearId: "00000000-0000-0000-0000-000000000002",
+      academicYearId: FALLBACK_ACADEMIC_YEAR,
     };
   }
 }
 
-/** Roles autorizados para operaciones de reports */
-export function requireRole(ctx: ApiContext, allowed: string[]) {
-  if (!allowed.includes(ctx.role)) {
-    throw new Error("No autorizado: rol insuficiente");
-  }
-}
-
-const REPORT_ROLES = ["SUPER_ADMIN", "DIRECTOR", "SECRETARIA"];
-
-export function requireReportsRole(ctx: ApiContext) {
-  requireRole(ctx, REPORT_ROLES);
+/**
+ * Atajo: valida que el usuario tiene el permiso requerido.
+ * Usa el ApiContext obtenido por getApiContext().
+ * Lanza error con mensaje "No autorizado" si no tiene el permiso.
+ */
+export function guard(ctx: ApiContext, permission: string): void {
+  requirePermission(ctx.role, permission);
 }

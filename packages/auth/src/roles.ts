@@ -12,57 +12,126 @@ export const ROLES = [
 
 export type { Role };
 
+export const PERMISSIONS = {
+  STUDENTS_READ: "students:read",
+  STUDENTS_WRITE: "students:write",
+  TEACHERS_READ: "teachers:read",
+  TEACHERS_WRITE: "teachers:write",
+  SUBJECTS_READ: "subjects:read",
+  SUBJECTS_WRITE: "subjects:write",
+  GUARDIANS_READ: "guardians:read",
+  GUARDIANS_WRITE: "guardians:write",
+  ADMISSIONS_READ: "admissions:read",
+  ADMISSIONS_WRITE: "admissions:write",
+  ENROLLMENTS_READ: "enrollments:read",
+  ENROLLMENTS_WRITE: "enrollments:write",
+  ATTENDANCE_READ: "attendance:read",
+  ATTENDANCE_WRITE: "attendance:write",
+  GRADES_READ: "grades:read",
+  GRADES_WRITE: "grades:write",
+  BEHAVIOR_READ: "behavior:read",
+  BEHAVIOR_WRITE: "behavior:write",
+  COMMUNICATION_READ: "communication:read",
+  COMMUNICATION_WRITE: "communication:write",
+  FINANCE_READ: "finance:read",
+  FINANCE_WRITE: "finance:write",
+  PAYMENTS_READ: "payments:read",
+  PAYMENTS_WRITE: "payments:write",
+  INVOICES_READ: "invoices:read",
+  INVOICES_WRITE: "invoices:write",
+  REPORTS_READ: "reports:read",
+  CERTIFICATES_READ: "certificates:read",
+  CERTIFICATES_WRITE: "certificates:write",
+  SETTINGS_READ: "settings:read",
+  SETTINGS_WRITE: "settings:write",
+  USERS_READ: "users:read",
+  USERS_WRITE: "users:write",
+  SCHEDULE_READ: "schedule:read",
+  ASSIGNMENTS_READ: "assignments:read",
+} as const;
+
+export type Permission = (typeof PERMISSIONS)[keyof typeof PERMISSIONS];
+
 export const ROLE_PERMISSIONS: Record<Role, string[]> = {
   SUPER_ADMIN: ["*"],
   DIRECTOR: [
-    "students:read", "students:write",
-    "teachers:read", "teachers:write",
-    "attendance:read", "attendance:write",
-    "grades:read", "grades:write",
-    "reports:read",
-    "communication:read", "communication:write",
-    "finance:read",
-    "settings:read", "settings:write",
-    "users:read", "users:write",
+    PERMISSIONS.STUDENTS_READ, PERMISSIONS.STUDENTS_WRITE,
+    PERMISSIONS.TEACHERS_READ, PERMISSIONS.TEACHERS_WRITE,
+    PERMISSIONS.SUBJECTS_READ, PERMISSIONS.SUBJECTS_WRITE,
+    PERMISSIONS.ATTENDANCE_READ, PERMISSIONS.ATTENDANCE_WRITE,
+    PERMISSIONS.GRADES_READ, PERMISSIONS.GRADES_WRITE,
+    PERMISSIONS.REPORTS_READ,
+    PERMISSIONS.COMMUNICATION_READ, PERMISSIONS.COMMUNICATION_WRITE,
+    PERMISSIONS.FINANCE_READ,
+    PERMISSIONS.SETTINGS_READ, PERMISSIONS.SETTINGS_WRITE,
+    PERMISSIONS.USERS_READ, PERMISSIONS.USERS_WRITE,
   ],
   SECRETARIA: [
-    "students:read", "students:write",
-    "guardians:read", "guardians:write",
-    "admissions:read", "admissions:write",
-    "enrollments:read", "enrollments:write",
-    "certificates:read", "certificates:write",
-    "finance:read",
-    "communication:read",
-    "settings:read",
+    PERMISSIONS.STUDENTS_READ, PERMISSIONS.STUDENTS_WRITE,
+    PERMISSIONS.GUARDIANS_READ, PERMISSIONS.GUARDIANS_WRITE,
+    PERMISSIONS.ADMISSIONS_READ, PERMISSIONS.ADMISSIONS_WRITE,
+    PERMISSIONS.ENROLLMENTS_READ, PERMISSIONS.ENROLLMENTS_WRITE,
+    PERMISSIONS.SUBJECTS_READ, PERMISSIONS.SUBJECTS_WRITE,
+    PERMISSIONS.CERTIFICATES_READ, PERMISSIONS.CERTIFICATES_WRITE,
+    PERMISSIONS.FINANCE_READ,
+    PERMISSIONS.COMMUNICATION_READ,
+    PERMISSIONS.SETTINGS_READ,
   ],
   PROFESOR: [
-    "students:read",
-    "attendance:read", "attendance:write",
-    "grades:read", "grades:write",
-    "behavior:read", "behavior:write",
-    "communication:read", "communication:write",
-    "schedule:read",
+    PERMISSIONS.STUDENTS_READ,
+    PERMISSIONS.ATTENDANCE_READ, PERMISSIONS.ATTENDANCE_WRITE,
+    PERMISSIONS.GRADES_READ, PERMISSIONS.GRADES_WRITE,
+    PERMISSIONS.BEHAVIOR_READ, PERMISSIONS.BEHAVIOR_WRITE,
+    PERMISSIONS.COMMUNICATION_READ, PERMISSIONS.COMMUNICATION_WRITE,
+    PERMISSIONS.SCHEDULE_READ,
   ],
   PADRE: [
-    "students:read",
-    "attendance:read",
-    "grades:read",
-    "communication:read", "communication:write",
-    "finance:read",
-    "payments:write",
+    PERMISSIONS.STUDENTS_READ,
+    PERMISSIONS.ATTENDANCE_READ,
+    PERMISSIONS.GRADES_READ,
+    PERMISSIONS.COMMUNICATION_READ, PERMISSIONS.COMMUNICATION_WRITE,
+    PERMISSIONS.FINANCE_READ,
+    PERMISSIONS.PAYMENTS_WRITE,
   ],
   ESTUDIANTE: [
-    "schedule:read",
-    "grades:read",
-    "attendance:read",
-    "communication:read",
-    "assignments:read",
+    PERMISSIONS.SCHEDULE_READ,
+    PERMISSIONS.GRADES_READ,
+    PERMISSIONS.ATTENDANCE_READ,
+    PERMISSIONS.COMMUNICATION_READ,
+    PERMISSIONS.ASSIGNMENTS_READ,
   ],
   CONTABILIDAD: [
-    "students:read",
-    "finance:read", "finance:write",
-    "payments:read", "payments:write",
-    "invoices:read", "invoices:write",
-    "reports:read",
+    PERMISSIONS.STUDENTS_READ,
+    PERMISSIONS.FINANCE_READ, PERMISSIONS.FINANCE_WRITE,
+    PERMISSIONS.PAYMENTS_READ, PERMISSIONS.PAYMENTS_WRITE,
+    PERMISSIONS.INVOICES_READ, PERMISSIONS.INVOICES_WRITE,
+    PERMISSIONS.REPORTS_READ,
   ],
 };
+
+/**
+ * Verifica si un rol tiene un permiso específico.
+ */
+export function hasPermission(role: Role, permission: string): boolean {
+  const permissions = ROLE_PERMISSIONS[role];
+  if (!permissions) return false;
+  if (permissions.includes("*")) return true;
+  return permissions.includes(permission);
+}
+
+/**
+ * Verifica si un rol tiene al menos uno de los permisos dados.
+ */
+export function hasAnyPermission(role: Role, permissions: string[]): boolean {
+  return permissions.some((p) => hasPermission(role, p));
+}
+
+/**
+ * Lanza error si el rol no tiene el permiso requerido.
+ * Útil en API routes y server actions.
+ */
+export function requirePermission(role: string, permission: string): void {
+  if (!hasPermission(role as Role, permission)) {
+    throw new Error(`No autorizado: se requiere permiso "${permission}"`);
+  }
+}

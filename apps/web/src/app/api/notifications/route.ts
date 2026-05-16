@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@insti/database";
-import { getApiContext } from "@/lib/api-context";
+import { getApiContext, guard } from "@/lib/api-context";
+import { PERMISSIONS } from "@insti/auth";
 
 export async function GET() {
   const ctx = await getApiContext();
+  guard(ctx, PERMISSIONS.COMMUNICATION_READ);
   const items = await db.notifications.findMany({
     where: { user_id: ctx.userId },
     orderBy: { created_at: "desc" },
@@ -29,6 +31,7 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   const ctx = await getApiContext();
+  guard(ctx, PERMISSIONS.COMMUNICATION_READ);
   const { ids } = await request.json();
 
   if (ids?.length) {

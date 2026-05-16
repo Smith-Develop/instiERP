@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@insti/database";
-import { getApiContext } from "@/lib/api-context";
+import { getApiContext, guard } from "@/lib/api-context";
+import { PERMISSIONS } from "@insti/auth";
 
 export async function POST(
   request: NextRequest,
@@ -8,6 +9,7 @@ export async function POST(
 ) {
   try {
     const ctx = await getApiContext();
+    guard(ctx, PERMISSIONS.COMMUNICATION_WRITE);
     const { id } = await params;
     const { content } = await request.json();
 
