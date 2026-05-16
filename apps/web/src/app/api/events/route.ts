@@ -3,13 +3,26 @@ import { db } from "@insti/database";
 import { getApiContext, guard } from "@/lib/api-context";
 import { PERMISSIONS } from "@insti/auth";
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   const ctx = await getApiContext();
   guard(ctx, PERMISSIONS.COMMUNICATION_READ);
+  const { searchParams } = new URL(request.url);
+  const from = searchParams.get("from");
+  const to = searchParams.get("to");
+
+  const where: Record<string, unknown> = { school_id: ctx.schoolId, deleted_at: null };
+
+  if (from && to) {
+    where.OR = [
+      { start_date: { gte: new Date(from), lte: new Date(to) } },
+      { end_date: { gte: new Date(from), lte: new Date(to) } },
+    ];
+  }
+
   const items = await db.events.findMany({
-    where: { school_id: ctx.schoolId, deleted_at: null },
+    where: where as never,
     orderBy: { start_date: "asc" },
-    take: 50,
+    take: 200,
   });
   return NextResponse.json({ success: true, data: { items } });
 }
