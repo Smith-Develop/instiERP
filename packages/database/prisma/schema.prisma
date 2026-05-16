@@ -254,6 +254,7 @@ model students {
   student_grades    student_grades[]
   behavior_reports  behavior_reports[]
   invoices          invoices[]
+  submissions       classroom_submissions[]
 
   @@index([school_id])
   @@index([document_number])
@@ -362,6 +363,7 @@ model teachers {
   school              schools             @relation(fields: [school_id], references: [id])
   teacher_assignments teacher_assignments[]
   schedules           schedules[]
+  classroom_assignments classroom_assignments[]
 
   @@index([school_id])
   @@map("teachers")
@@ -381,6 +383,7 @@ model subjects {
   teacher_assignments teacher_assignments[]
   schedules           schedules[]
   grade_items         grade_items[]
+  classroom_assignments classroom_assignments[]
 
   @@unique([school_id, name])
   @@index([school_id])
@@ -773,4 +776,122 @@ model documents {
   @@index([school_id])
   @@index([entity_type, entity_id])
   @@map("documents")
+}
+
+// ============================ AULA VIRTUAL ============================
+
+model classroom_assignments {
+  id                 String    @id @default(uuid()) @db.Uuid
+  school_id          String    @db.Uuid
+  academic_year_id   String    @db.Uuid
+  teacher_id         String    @db.Uuid
+  subject_id         String    @db.Uuid
+  grade_id           String    @db.Uuid
+  section_id         String?   @db.Uuid
+  grade_item_id      String?   @db.Uuid
+  rubric_id          String?   @db.Uuid
+  title              String
+  description        String?
+  type               String    @default("TAREA")
+  points             Decimal?  @db.Decimal(5, 1)
+  due_date           DateTime?
+  status             String    @default("DRAFT")
+  allow_student_posts Boolean  @default(false)
+  created_at         DateTime  @default(now())
+  updated_at         DateTime  @updatedAt
+  deleted_at         DateTime?
+
+  teacher     teachers    @relation(fields: [teacher_id], references: [id])
+  subject     subjects    @relation(fields: [subject_id], references: [id])
+  submissions classroom_submissions[]
+  materials   classroom_materials[]
+
+  @@index([school_id])
+  @@index([section_id])
+  @@index([teacher_id])
+  @@index([due_date])
+  @@map("classroom_assignments")
+}
+
+model classroom_submissions {
+  id              String    @id @default(uuid()) @db.Uuid
+  assignment_id   String    @db.Uuid
+  student_id      String    @db.Uuid
+  content         String?
+  files           Json?
+  status          String    @default("PENDIENTE")
+  score           Decimal?  @db.Decimal(5, 1)
+  feedback        String?
+  submitted_at    DateTime?
+  graded_at       DateTime?
+  created_at      DateTime  @default(now())
+  updated_at      DateTime  @updatedAt
+  deleted_at      DateTime?
+
+  assignment classroom_assignments @relation(fields: [assignment_id], references: [id])
+  student    students              @relation(fields: [student_id], references: [id])
+
+  @@unique([assignment_id, student_id])
+  @@index([assignment_id])
+  @@index([student_id])
+  @@map("classroom_submissions")
+}
+
+model classroom_materials {
+  id            String   @id @default(uuid()) @db.Uuid
+  assignment_id String   @db.Uuid
+  name          String
+  url           String?
+  type          String   @default("LINK")
+  created_at    DateTime @default(now())
+
+  assignment classroom_assignments @relation(fields: [assignment_id], references: [id])
+
+  @@map("classroom_materials")
+}
+
+model rubrics {
+  id          String    @id @default(uuid()) @db.Uuid
+  school_id   String    @db.Uuid
+  subject_id  String?   @db.Uuid
+  name        String
+  criteria    Json
+  created_at  DateTime  @default(now())
+  updated_at  DateTime  @updatedAt
+  deleted_at  DateTime?
+
+  @@index([school_id])
+  @@map("rubrics")
+}
+
+model class_posts {
+  id          String    @id @default(uuid()) @db.Uuid
+  school_id   String    @db.Uuid
+  section_id  String    @db.Uuid
+  author_id   String    @db.Uuid
+  content     String
+  type        String    @default("POST")
+  created_at  DateTime  @default(now())
+  updated_at  DateTime  @updatedAt
+  deleted_at  DateTime?
+
+  comments post_comments[]
+
+  @@index([school_id])
+  @@index([section_id, created_at])
+  @@map("class_posts")
+}
+
+model post_comments {
+  id          String    @id @default(uuid()) @db.Uuid
+  post_id     String    @db.Uuid
+  author_id   String    @db.Uuid
+  content     String
+  created_at  DateTime  @default(now())
+  deleted_at  DateTime?
+
+  post class_posts @relation(fields: [post_id], references: [id])
+
+  @@index([post_id])
+  @@map("post_comments")
 }
