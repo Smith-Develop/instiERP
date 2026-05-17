@@ -2,11 +2,9 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button, Input } from "@insti/ui";
-import { Search, Pencil, Trash2, ChevronLeft, ChevronRight } from "lucide-react";
+import { Search, ChevronLeft, ChevronRight } from "lucide-react";
 import { StudentProfileModal } from "@/modules/students/student-profile-modal";
-import { StudentCreateModal } from "@/modules/students/student-create-modal";
 
 type Student = {
   id: string; first_name: string; last_name: string; document_number: string | null;
@@ -16,14 +14,7 @@ type Student = {
 export function StudentTable({ students, search, page, totalPages }: { students: Student[]; search: string; page: number; totalPages: number }) {
   const router = useRouter();
   const [searchValue, setSearchValue] = useState(search);
-  const queryClient = useQueryClient();
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [showCreate, setShowCreate] = useState(false);
-
-  const deleteMutation = useMutation({
-    mutationFn: async (id: string) => { await fetch(`/api/students/${id}`, { method: "DELETE" }); },
-    onSuccess: () => { queryClient.invalidateQueries(); router.refresh(); },
-  });
 
   function doSearch() {
     const params = new URLSearchParams();
@@ -72,14 +63,9 @@ export function StudentTable({ students, search, page, totalPages }: { students:
                     <span className={`inline-flex rounded-md px-2 py-0.5 text-xs font-semibold ${student.is_active ? "bg-emerald-50 text-emerald-700" : "bg-red-50 text-red-700"}`}>{student.is_active ? "Activo" : "Inactivo"}</span>
                   </td>
                   <td className="p-4 text-right">
-                    <div className="flex items-center justify-end gap-1">
-                      <button onClick={() => setSelectedId(student.id)} className="inline-flex items-center rounded-md p-1.5 text-slate-400 hover:bg-slate-100 hover:text-[#2563EB]" title="Ver expediente">
-                        <Pencil className="h-4 w-4"/>
-                      </button>
-                      <button onClick={() => { if (confirm("¿Eliminar?")) deleteMutation.mutate(student.id); }} disabled={deleteMutation.isPending && deleteMutation.variables === student.id} className="inline-flex items-center rounded-md p-1.5 text-slate-400 hover:bg-red-50 hover:text-red-600 disabled:opacity-50" title="Eliminar">
-                        <Trash2 className="h-4 w-4"/>
-                      </button>
-                    </div>
+                    <button onClick={() => setSelectedId(student.id)} className="text-sm text-[#2563EB] hover:underline">
+                      Ver
+                    </button>
                   </td>
                 </tr>
               );
@@ -99,7 +85,6 @@ export function StudentTable({ students, search, page, totalPages }: { students:
       )}
 
       {selectedId && <StudentProfileModal studentId={selectedId} open={true} onClose={() => setSelectedId(null)} />}
-      <StudentCreateModal open={showCreate} onClose={() => setShowCreate(false)} />
     </div>
   );
 }
