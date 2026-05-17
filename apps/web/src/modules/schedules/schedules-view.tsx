@@ -44,7 +44,8 @@ export function SchedulesView({ schedules, teachers, subjects, sections, filterS
 
   const createMutation = useMutation({
     mutationFn: async () => {
-      const res = await fetch("/api/schedules", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ teacher_id: teacherId, subject_id: subjectId, section_id: sectionId || undefined, day_of_week: Number(day), start_time: start, end_time: end, classroom: classroom || undefined }) });
+      const section = sections.find(s => s.id === sectionId);
+      const res = await fetch("/api/schedules", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ teacher_id: teacherId, subject_id: subjectId, section_id: sectionId || undefined, grade_id: section?.grade_id, day_of_week: Number(day), start_time: start, end_time: end, classroom: classroom || undefined }) });
       if (!res.ok) { const d = await res.json(); throw new Error(d.error || "Error"); }
     },
     onSuccess: () => { queryClient.invalidateQueries(); setError(""); },
