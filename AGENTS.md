@@ -1,605 +1,141 @@
-
-# 🏫 AGENTS.md — ERP Escolar SaaS
-
-## 📌 Proyecto
-
-ERP escolar moderno, multi-tenant y multi-año, diseñado para colegios, institutos y academias.
-
-El sistema permitirá gestionar:
-- Estudiantes
-- Profesores
-- Padres/Tutores
-- Asistencia
-- Calificaciones
-- Finanzas
-- Comunicación interna
-- Expedientes académicos
-- Boletines y certificados
-- Roles y permisos
-
-El enfoque principal del proyecto es:
-- Arquitectura escalable
-- Código limpio y mantenible
-- UI moderna y responsive
-- Seguridad empresarial
-- Alto rendimiento
-- Experiencia móvil optimizada para profesores y padres
-
----
-
-# 🧠 Filosofía de Desarrollo
-
-Este proyecto sigue una metodología de:
-- Clean Architecture
-- Domain Driven Design (DDD)
-- Component Driven Development
-- API First
-- Multi-tenant Ready
-- Mobile First
-- Security First
-
-Todo el código generado debe:
-- Ser modular
-- Ser tipado estrictamente
-- Evitar duplicación
-- Tener separación clara de responsabilidades
-- Ser altamente reutilizable
-- Mantener naming consistente
-- Ser fácil de escalar
-
----
-
-# ⚙️ Stack Tecnológico
-
-## Frontend
-- Next.js 15+
-- React 19+
-- TypeScript
-- TailwindCSS
-- Shadcn/UI
-- React Hook Form
-- Zod
-- TanStack Query
-- Zustand
-- Framer Motion
-
-## Backend
-- Next.js Server Actions + Route Handlers
-- Prisma ORM
-- PostgreSQL
-
-## Auth
-- Better Auth o Auth.js
-- RBAC completo
-- JWT + Session Strategy
-
-## Infraestructura
-- Vercel
-- Supabase Storage (documentos)
-- Resend (emails)
-- Stripe (pagos)
-- Docker
-
----
-
-# 🏛️ Arquitectura General
-
-## Estructura Principal
-
-/apps
-/web
-
-/packages
-/ui
-/database
-/auth
-/types
-/utils
-/config
-
-## Arquitectura Base
-
-El sistema debe ser:
-
-### Multi-Tenant
-Cada colegio funciona como una organización aislada.
-
-### Multi-Año Lectivo
-Toda entidad importante debe pertenecer a:
-- school_id
-- academic_year_id
-
-Nunca mezclar información de distintos años lectivos.
-
----
-
-# 🔐 Sistema de Roles (RBAC)
-
-## Roles principales
-
-- SUPER_ADMIN
-- DIRECTOR
-- SECRETARIA
-- PROFESOR
-- PADRE
-- ESTUDIANTE
-- CONTABILIDAD
-
-## Reglas
-
-- Toda ruta debe validar permisos
-- Nunca confiar en permisos del frontend
-- Toda acción sensible requiere validación server-side
-- Los permisos deben ser centralizados
-
----
-
-# 🗄️ Reglas de Base de Datos
-
-## Reglas Generales
-
-- Todas las tablas usan UUID
-- Timestamps obligatorios:
-  - created_at
-  - updated_at
-
-- Soft delete:
-  - deleted_at
-
-- Índices obligatorios en:
-  - school_id
-  - academic_year_id
-  - foreign keys
-  - attendance dates
-  - grade lookups
-
-## Naming
-
-### Tablas
-snake_case plural
-
-Ejemplo:
-students
-teacher_assignments
-
-### Columnas
-snake_case
-
-### Relaciones
-Siempre explícitas
-
----
-
-# 📦 Módulos del Sistema
-
-# 1️⃣ Secretaría y Admisiones
-
-## Funcionalidades
-
-- Preinscripciones
-- Admisiones
-- Gestión documental
-- Expedientes
-- Configuración académica
-
-## Entidades
-
-- students
-- guardians
-- admissions
-- enrollments
-- academic_levels
-- grades
-- sections
-
----
-
-# 2️⃣ Gestión Docente
-
-## Funcionalidades
-
-- Gestión de profesores
-- Especialidades
-- Carga horaria
-- Asignaciones académicas
-
-## Entidades
-
-- teachers
-- subjects
-- teacher_assignments
-- schedules
-
----
-
-# 3️⃣ Gestión del Aula
-
-## Funcionalidades
-
-- Asistencia
-- Registro de notas
-- Conducta
-- Observaciones
-
-## Reglas UX
-
-Esta sección debe:
-- Cargar rápido
-- Ser optimizada para tablets
-- Tener interacción mínima
-- Permitir acciones masivas
-
-## Entidades
-
-- attendances
-- grades
-- grade_items
-- behavior_reports
-
----
-
-# 4️⃣ Boletines y Certificados
-
-## Funcionalidades
-
-- Cierre académico
-- Generación PDF
-- Certificados
-- Historial académico
-
-## Reglas
-
-- PDFs generados server-side
-- Templates desacoplados
-- Soporte para firmas digitales
-
----
-
-# 5️⃣ Comunicación
-
-## Funcionalidades
-
-- Anuncios
-- Agenda
-- Mensajería
-- Notificaciones
-
-## Reglas
-
-- Evitar spam de padres
-- Chats limitados por permisos
-- Notificaciones desacopladas
-
-## Entidades
-
-- announcements
-- conversations
-- messages
-- events
-- notifications
-
----
-
-# 6️⃣ Finanzas
-
-## Funcionalidades
-
-- Mensualidades
-- Facturación
-- Pagos online
-- Morosidad
-
-## Integraciones
-
-- Stripe
-- Transferencias bancarias
-
-## Entidades
-
-- invoices
-- payments
-- payment_methods
-- financial_movements
-
----
-
-# 👥 Dashboards por Rol
-
-## Director
-- KPIs generales
-- Estadísticas
-- Asistencia global
-- Rendimiento académico
-
-## Secretaría
-- Matrículas
-- Expedientes
-- Certificados
-- Pagos pendientes
-
-## Profesor
-- Horario
-- Lista rápida
-- Notas pendientes
-
-## Padre
-- Rendimiento
-- Boletines
-- Asistencia
-- Pagos
-
-## Estudiante
-- Tareas
-- Notas
-- Calendario
-
----
-
-# 🎨 Reglas UI/UX
-
-## Diseño
-
-Usar el `DESIGN.md` como fuente de verdad para colores, tipografía, spacing, shadows,
-radios y especificaciones de componentes. El sistema es **profesional, corporativo y minimalista**:
-- Paleta: Primary #1E3A5F (azul corporativo), Accent #2563EB, neutrales Slate
-- Tipografía: Inter
-- Shadcn/UI New York style (`rounded-md`, sombras sutiles, sin glows)
-
-## Componentes
-
-Obligatorio:
-- Shadcn/UI New York style (`components.json` con `style: "new-york"`)
-- Componentes reutilizables en `packages/ui`
-- Tablas con TanStack Table + Shadcn
-- Formularios con React Hook Form + Zod
-- Iconos: Lucide React (20px default, 16px para inline)
-
-## Responsive
-
-Obligatorio:
-- Mobile first (<768px: sidebar oculta, single-column)
-- Tablet optimized (768-1023px: sidebar colapsada, two-column)
-- Desktop adaptive (≥1024px: sidebar completa, multi-column)
-- Touch targets ≥44px (WCAG AA)
-
----
-
-# 🧩 Convenciones de Código
-
-## TypeScript
-
-Nunca usar:
-- any
-- ts-ignore
-
-Siempre:
-- Tipado explícito
-- Schemas Zod
-- Inferencias limpias
-
----
-
-# 📂 Estructura Frontend
-
-/src
-/app
-/components
-/modules
-/hooks
-/services
-/store
-/lib
-/types
-
-## Regla
-
-Cada módulo debe encapsular:
-- components
-- hooks
-- services
-- schemas
-- types
-
----
-
-# 🚨 Seguridad
-
-## Obligatorio
-
-- Validación server-side
-- Sanitización inputs
-- Rate limiting
-- Protección CSRF
-- Validación RBAC
-- Logs de auditoría
-
-## Nunca
-
-- Exponer IDs sensibles
-- Confiar en frontend
-- Guardar secretos en cliente
-
----
-
-# ⚡ Performance
-
-## Reglas
-
-- Server Components por defecto
-- Lazy loading
-- Suspense boundaries
-- Optimistic UI
-- Query caching
-- Paginación obligatoria
-
-## Base de datos
-
-- Relaciones optimizadas
-- Índices correctos
-- Evitar N+1 queries
-
----
-
-# 📑 Estándares API
-
-## Respuestas
-
-Formato estándar:
+# AGENTS.md — Insti ERP
+
+Monorepo ERP escolar con Next.js 15, Prisma, Better Auth, Supabase, TailwindCSS + Shadcn/UI New York.
+
+## Setup
+
+```bash
+pnpm install
+cp .env.example .env   # completar DATABASE_URL, BETTER_AUTH_SECRET, SUPABASE keys
+pnpm db:push           # sincronizar schema
+pnpm db:seed           # datos demo
+pnpm dev               # → localhost:3000
+```
+
+## Comandos
+
+```bash
+pnpm dev               # dev server
+pnpm build             # build producción
+pnpm test              # vitest (20 unit tests)
+pnpm test:e2e          # playwright
+pnpm db:push           # schema → DB sin migraciones
+pnpm db:seed           # correr seed
+pnpm db:generate       # regenerar Prisma client
+```
+
+## Arquitectura
+
+```
+apps/web/              # Next.js 15 App Router
+  src/app/api/         # 70+ endpoints REST
+  src/app/dashboard/   # 25+ páginas
+  src/modules/         # lógica por módulo (schemas, modals, tables)
+  src/lib/             # utilidades (session, api-context, audit, storage, email)
+packages/
+  auth/                # Better Auth + roles + permisos
+  database/            # Prisma schema + client
+  ui/                  # componentes Shadcn/UI New York
+  types/ utils/ config/
+```
+
+## Patrones obligatorios
+
+### API routes — siempre usar `getApiContext` + `guard`
 
 ```ts
-type ApiResponse<T> = {
-  success: boolean
-  data?: T
-  error?: string
+import { getApiContext, guard } from "@/lib/api-context";
+import { PERMISSIONS } from "@insti/auth";
+
+export async function POST(request: NextRequest) {
+  const ctx = await getApiContext();
+  guard(ctx, PERMISSIONS.STUDENTS_WRITE);   // 403 si no tiene permiso
+  // ...
 }
 ```
 
-## Errores
+Permisos en `packages/auth/src/roles.ts` → `PERMISSIONS.STUDENTS_READ`, etc. Usar constantes, nunca strings.
 
-* Centralizados
-* Human readable
-* Logs internos separados
+### Formularios — React Hook Form + Zod
 
----
+```tsx
+const schema = z.object({ name: z.string().min(1) });
+const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<FormData>({
+  resolver: zodResolver(schema),
+});
+// <form onSubmit={handleSubmit(onSubmit)}>
+// <Input {...register("name")} />
+// {errors.name && <p className="text-xs text-red-600">{errors.name.message}</p>}
+```
 
-# 🧪 Testing
+### Modales CV-style para entidades principales
 
-## Obligatorio
+Estudiantes, profesores y admisiones usan modales con:
+- Header gradiente (`bg-gradient-to-r from-[#1E3A5F] to-[#2D5A8A]`)
+- Navegación por secciones (barra horizontal con pestañas)
+- Cada sección en `<div className="rounded-lg border bg-white p-6">`
+- Edición inline con toggle `editing` state
+- Delete con confirmación en dos pasos
+- Upload de documentos con campo de nombre
 
-* Unit testing
-* Integration testing
-* E2E testing
+Las páginas standalone `new` y `[id]` fueron eliminadas. TODO se hace desde modales.
 
-## Herramientas
+### Tablas — solo link "Ver", no botones editar/eliminar
 
-* Vitest
-* Playwright
+Los botones de acción están solo dentro del modal. La tabla muestra un `<button className="text-sm text-[#2563EB] hover:underline">Ver</button>`.
 
----
+### Sidebar — grupos con encabezados
 
-# 📝 Reglas para OpenCode AI
+En `dashboard/layout.tsx`, `allNavGroups` define 6 grupos: Principal, Gestión Escolar, Académico, Aula, Comunicación, Administración. Cada grupo tiene `title` + `items[]`. Filtrado por `hasPermission(role, item.permission)`.
 
-## Cuando generes código
+## Gotchas
 
-Siempre:
+### `@db.Uuid` rompe Better Auth
+Las tablas `session`, `account`, `verification` NO deben tener `@db.Uuid` en el `id`. Better Auth genera IDs no-UUID. Solo `user.id` lo tiene.
 
-* Explicar arquitectura
-* Crear código modular
-* Usar TypeScript estricto
-* Crear componentes reutilizables
-* Evitar lógica duplicada
-* Separar UI y lógica
+### Rutas estáticas con paréntesis
+PowerShell no maneja bien `(dashboard)` en nombres de carpeta. Usar `LiteralPath`:
+```powershell
+Remove-Item -Recurse -Force -LiteralPath "apps\web\src\app\dashboard\students\[id]"
+```
 
-## Cuando generes componentes
+### `NODE_ENV` es "production" durante build
+`getSessionContext()` y `getApiContext()` usan fallback dev solo si no hay sesión. No lanzar errores en Server Components porque Next.js intenta prerenderizar en build. El middleware ya bloquea acceso sin cookie.
 
-Siempre:
+### Tailwind config — usar ESM imports
+```ts
+import tailwindcssAnimate from "tailwindcss-animate";  // no require()
+plugins: [tailwindcssAnimate],
+```
 
-* Accesibles
-* Responsive
-* Reutilizables
-* Con loading states
-* Con empty states
-* Con error states
+### `<form>` no puede abarcar múltiples `<Card>` siblings
+Si el formulario tiene varias Cards, el `<form>` debe envolverlas a todas. Cada Card es un `<div>`, no un `<form>` independiente. El `<form onSubmit>` está en el padre y el `<Button type="submit">` en el último CardFooter.
 
-## Cuando generes formularios
+### Documentos: nombrar antes de subir
+El `DocumentList` y los modales tienen campo `docName` + file input. El archivo se renombra antes de subir: `new File([file], name, {type: file.type})`.
 
-Siempre:
+### Prisma Json fields
+`details: details ?? undefined` (no `?? null`). Prisma no acepta `null` en campos Json.
 
-* React Hook Form
-* Zod
-* Validaciones server/client
+## Referencias clave
 
----
+| Qué | Dónde |
+|---|---|
+| Permisos y roles | `packages/auth/src/roles.ts` |
+| Schema DB | `packages/database/prisma/schema.prisma` |
+| Sistema de diseño | `DESIGN.md` |
+| Estado del proyecto | `README.md` |
+| Seed datos demo | `packages/database/prisma/seed.ts` |
+| Sesión server | `apps/web/src/lib/session.ts` |
+| Contexto API | `apps/web/src/lib/api-context.ts` |
+| Middleware | `apps/web/src/middleware.ts` |
+| Storage | `apps/web/src/lib/storage.ts` |
+| Email | `apps/web/src/lib/email.ts` |
+| Auditoría | `apps/web/src/lib/audit.ts` |
 
-# 📌 Convenciones Git
+## Stats
 
-## Branches
-
-feature/
-fix/
-refactor/
-hotfix/
-
-## Commits
-
-feat:
-fix:
-refactor:
-docs:
-chore:
-
----
-
-# 🚀 Roadmap Inicial
-
-## FASE 1
-
-* Auth
-* RBAC
-* Multi-tenant
-* Gestión académica base
-
-## FASE 2
-
-* Aula virtual
-* Asistencia
-* Notas
-
-## FASE 3
-
-* Comunicación
-* Notificaciones
-
-## FASE 4
-
-* Finanzas
-* Stripe
-
-## FASE 5
-
-* Analytics
-* Reportes
-* IA
-
----
-
-# 🤖 Reglas de Generación IA
-
-La IA debe priorizar:
-
-1. Escalabilidad
-2. Seguridad
-3. Reutilización
-4. Performance
-5. UX profesional
-
-Nunca generar:
-
-* Código monolítico
-* Componentes gigantes
-* Queries inseguras
-* Código sin tipado
-* Lógica mezclada
-
----
-
-# 🧠 Visión del Producto
-
-El objetivo es construir un ERP escolar SaaS premium comparable a:
-
-* Google Classroom
-* Fedena
-* Blackboard
-* Moodle moderno
-* Additio
-
-Pero con:
-
-* Mejor UX
-* Arquitectura moderna
-* Mobile experience superior
-* Automatización avanzada
-* Mejor rendimiento
-
-
-
+```
+79 páginas | 70+ API routes | 44+ modelos DB | 33+ permisos RBAC
+20 unit tests | 9 E2E tests | 34 commits
+```
