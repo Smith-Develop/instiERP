@@ -18,6 +18,7 @@ import {
   UserRound,
   Library,
   AlertTriangle,
+  ArrowLeftRight,
 } from "lucide-react";
 import { getServerSession } from "@/lib/session";
 import { NotificationBell } from "@/modules/notifications/notification-bell";
@@ -37,6 +38,7 @@ const allNavItems: NavItem[] = [
   { href: "/dashboard/teachers", icon: GraduationCap, label: "Profesores", permission: PERMISSIONS.TEACHERS_READ },
   { href: "/dashboard/guardians", icon: UserRound, label: "Tutores", permission: PERMISSIONS.GUARDIANS_READ },
   { href: "/dashboard/admissions", icon: UserPlus, label: "Admisiones", permission: PERMISSIONS.ADMISSIONS_READ },
+  { href: "/dashboard/assignments", icon: ArrowLeftRight, label: "Asignaciones", permission: PERMISSIONS.TEACHERS_READ },
   { href: "/dashboard/subjects", icon: Library, label: "Asignaturas", permission: PERMISSIONS.SUBJECTS_READ },
   { href: "/dashboard/academic", icon: Building2, label: "Académico", permission: PERMISSIONS.SETTINGS_READ },
   { href: "/dashboard/attendance", icon: ClipboardCheck, label: "Asistencia", permission: PERMISSIONS.ATTENDANCE_READ },

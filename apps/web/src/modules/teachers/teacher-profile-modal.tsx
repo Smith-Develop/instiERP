@@ -210,7 +210,7 @@ export function TeacherProfileModal({ teacherId, open, onClose }: Props) {
                       ))}
                     </div>
                   ) : <p className="text-sm text-slate-400">Sin asignaturas asignadas.</p>}
-                  <p className="mt-4 text-xs text-slate-400">Para añadir o quitar asignaturas, usa la sección de <a href="/dashboard/assignments" className="text-[#2563EB] hover:underline">Asignaciones</a>.</p>
+                  <p className="mt-4 text-xs text-slate-400">Para añadir o quitar asignaturas, usa la sección <a href="/dashboard/assignments" className="text-[#2563EB] hover:underline">Asignaciones</a> del menú lateral.</p>
                 </div>
               )}
 
