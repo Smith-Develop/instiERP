@@ -14,7 +14,7 @@ type StudentFull = {
   id: string; first_name: string; last_name: string; document_type: string | null; document_number: string | null;
   birth_date: string | null; gender: string | null; address: string | null;
   medical_notes: string | null; emergency_contact: string | null; emergency_phone: string | null;
-  is_active: boolean; photo_url: string | null;
+  is_active: boolean; photo_url: string | null; admitted_at: string | null;
 };
 
 type GradeItem = { id: string; name: string; weight: string };
@@ -165,6 +165,7 @@ export function StudentProfileModal({ studentId, open, onClose }: Props) {
                 {full?.document_number && <span>{full.document_type ?? ""} {full.document_number}</span>}
                 {full?.birth_date && <span>Nac. {new Date(full.birth_date).toLocaleDateString("es-ES")}</span>}
                 {full?.gender && <span>{full.gender === "M" ? "Masculino" : full.gender === "F" ? "Femenino" : full.gender}</span>}
+                {full?.admitted_at && <span>Adm. {new Date(full.admitted_at).toLocaleDateString("es-ES")}</span>}
               </div>
               <span className={`inline-flex rounded-md px-2 py-0.5 mt-2 text-xs font-semibold ${full?.is_active ? "bg-emerald-400/20 text-emerald-200" : "bg-red-400/20 text-red-200"}`}>
                 {full?.is_active ? "Activo" : "Inactivo"}
@@ -241,7 +242,7 @@ export function StudentProfileModal({ studentId, open, onClose }: Props) {
                     </form>
                   ) : (
                     <div className="grid grid-cols-2 gap-x-8 gap-y-4 text-sm">
-                      {[{ l: "Nombre", v: `${full.first_name} ${full.last_name}` }, { l: "Documento", v: full.document_number ? `${full.document_type ?? ""} ${full.document_number}` : "—" }, { l: "Fecha nacimiento", v: full.birth_date ? new Date(full.birth_date).toLocaleDateString("es-ES", { dateStyle: "long" }) : "—" }, { l: "Género", v: full.gender === "M" ? "Masculino" : full.gender === "F" ? "Femenino" : "—" }, { l: "Dirección", v: full.address || "—" }, { l: "Notas médicas", v: full.medical_notes || "—" }, { l: "Contacto emergencia", v: full.emergency_contact || "—" }, { l: "Tel. emergencia", v: full.emergency_phone || "—" }].map(r => (
+                      {[{ l: "Nombre", v: `${full.first_name} ${full.last_name}` }, { l: "Documento", v: full.document_number ? `${full.document_type ?? ""} ${full.document_number}` : "—" }, { l: "Fecha nacimiento", v: full.birth_date ? new Date(full.birth_date).toLocaleDateString("es-ES", { dateStyle: "long" }) : "—" }, { l: "Admitido", v: full.admitted_at ? new Date(full.admitted_at).toLocaleDateString("es-ES", { dateStyle: "long" }) : "—" }, { l: "Género", v: full.gender === "M" ? "Masculino" : full.gender === "F" ? "Femenino" : "—" }, { l: "Dirección", v: full.address || "—" }, { l: "Notas médicas", v: full.medical_notes || "—" }, { l: "Contacto emergencia", v: full.emergency_contact || "—" }, { l: "Tel. emergencia", v: full.emergency_phone || "—" }].map(r => (
                         <div key={r.l} className="flex gap-2"><span className="text-slate-400 w-36 shrink-0">{r.l}</span><span className="font-medium text-slate-900">{r.v}</span></div>
                       ))}
                     </div>
