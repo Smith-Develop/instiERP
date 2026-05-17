@@ -10,12 +10,12 @@ type AcademicYear = { id: string; year_label: string };
 type Student = { id: string; first_name: string; last_name: string };
 
 async function fetchData() {
-  const [sectionsR, schoolsR] = await Promise.all([
-    fetch("/api/academic/sections"), fetch("/api/schools"),
+  const [sectionsR, yearsR] = await Promise.all([
+    fetch("/api/academic/sections"), fetch("/api/academic/years"),
   ]);
   const sectionsD = await sectionsR.json().catch(() => ({ data: [] }));
-  const schoolsD = await schoolsR.json().catch(() => ({ data: null }));
-  return { sections: sectionsD.data as Section[] ?? [], years: schoolsD.data?.academicYears as AcademicYear[] ?? [] };
+  const yearsD = await yearsR.json().catch(() => ({ data: { items: [] } }));
+  return { sections: sectionsD.data as Section[] ?? [], years: yearsD.data?.items as AcademicYear[] ?? [] };
 }
 
 export default function PromotionsPage() {

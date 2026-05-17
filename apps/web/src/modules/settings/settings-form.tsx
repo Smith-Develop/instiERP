@@ -5,6 +5,7 @@ import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@insti/ui"
 import { Button, Input, Label } from "@insti/ui";
 import { Building2, CreditCard } from "lucide-react";
 import { PeriodsManager } from "./periods-manager";
+import { YearsManager } from "./years-manager";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 
@@ -13,7 +14,6 @@ type SchoolData = {
   currency: string; country: string; payment_provider: string;
   stripe_public: string | null; stripe_secret: string | null; mp_access_token: string | null;
 };
-type AcademicYear = { id: string; year_label: string; start_date: Date; end_date: Date; is_active: boolean };
 
 const schema = z.object({
   name: z.string().min(1), address: z.string().optional(), phone: z.string().optional(), email: z.string().optional(),
@@ -25,7 +25,7 @@ const currencies = [{ value: "eur", label: "EUR (€)" }, { value: "usd", label:
 const countries = [{ value: "ES", label: "España" }, { value: "MX", label: "México" }, { value: "AR", label: "Argentina" }, { value: "BR", label: "Brasil" }, { value: "CO", label: "Colombia" }, { value: "CL", label: "Chile" }, { value: "PE", label: "Perú" }];
 const providers = [{ value: "none", label: "Ninguno" }, { value: "stripe", label: "Stripe" }, { value: "mercadopago", label: "MercadoPago" }];
 
-export function SettingsForm({ school, academicYears }: { school: SchoolData | null; academicYears: AcademicYear[] }) {
+export function SettingsForm({ school }: { school: SchoolData | null }) {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState("");
@@ -90,7 +90,7 @@ export function SettingsForm({ school, academicYears }: { school: SchoolData | n
         </CardContent>
       </Card>
 
-      <Card><CardHeader><CardTitle>Años lectivos</CardTitle></CardHeader><CardContent><div className="space-y-2">{academicYears.map(y=><div key={y.id} className="flex items-center justify-between rounded-md border border-slate-200 px-4 py-3"><div><p className="font-medium text-slate-900">{y.year_label}</p><p className="text-sm text-slate-500">{new Date(y.start_date).toLocaleDateString("es-ES")} — {new Date(y.end_date).toLocaleDateString("es-ES")}</p></div><span className={`inline-flex rounded-md px-2 py-0.5 text-xs font-semibold ${y.is_active?"bg-emerald-50 text-emerald-700":"bg-slate-100 text-slate-600"}`}>{y.is_active?"Activo":"Inactivo"}</span></div>)}</div></CardContent></Card>
+      <YearsManager />
 
       <PeriodsManager />
     </div>

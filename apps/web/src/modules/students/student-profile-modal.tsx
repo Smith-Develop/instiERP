@@ -6,7 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button, Input, Label } from "@insti/ui";
 import { z } from "zod";
-import { X, Pencil, Trash2, Loader2, Camera, Download, Upload, Image, FileText, ChevronDown, User, Users, BookOpen, ClipboardCheck, AlertTriangle } from "lucide-react";
+import { X, Pencil, Trash2, Loader2, Camera, Download, Upload, Image, FileText, ChevronDown, User, Users, BookOpen, ClipboardCheck, AlertTriangle, ArrowRight } from "lucide-react";
 import { StudentGuardians } from "@/modules/guardians/student-guardians";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 
@@ -78,6 +78,7 @@ export function StudentProfileModal({ studentId, open, onClose }: Props) {
   const [uploadingDoc, setUploadingDoc] = useState(false);
   const [docName, setDocName] = useState("");
   const [selectedYear, setSelectedYear] = useState<string>("");
+  const [showPromote, setShowPromote] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const { data: full, isLoading, error } = useQuery({
@@ -257,9 +258,26 @@ export function StudentProfileModal({ studentId, open, onClose }: Props) {
             ) : (
               <button onClick={() => setEditing(false)} className="inline-flex items-center gap-1.5 rounded-md border border-white/30 px-3 py-1.5 text-sm font-medium text-white hover:bg-white/10 transition-colors">Cancelar</button>
             )}
+            {!editing && full?.is_active && !showPromote && (
+              <button onClick={() => setShowPromote(true)} className="inline-flex items-center gap-1.5 rounded-md border border-white/30 px-3 py-1.5 text-sm font-medium text-white hover:bg-white/10 transition-colors">
+                <ArrowRight className="h-4 w-4" /> Promover
+              </button>
+            )}
             <button onClick={onClose} className="rounded-md p-1.5 text-white/50 hover:text-white hover:bg-white/10"><X className="h-5 w-5" /></button>
           </div>
         </div>
+
+        {/* --- PROMOTE FORM --- */}
+        {showPromote && (
+          <div className="shrink-0 bg-[#1E3A5F]/95 px-8 py-3 border-b border-white/10">
+            <p className="text-xs text-white/60 mb-2">Promover a otro año lectivo</p>
+            <PromoteInline
+              studentId={studentId}
+              onClose={() => setShowPromote(false)}
+              onDone={() => { setShowPromote(false); queryClient.invalidateQueries({ queryKey: ["student-history", studentId] }); }}
+            />
+          </div>
+        )}
 
         {/* --- SECTION NAV --- */}
         <div className="shrink-0 flex border-b bg-slate-50 px-8 overflow-x-auto">
@@ -470,6 +488,54 @@ export function StudentProfileModal({ studentId, open, onClose }: Props) {
           <span>Insti ERP</span>
         </div>
       </div>
+    </div>
+  );
+}
+
+function PromoteInline({ studentId, onClose, onDone }: { studentId: string; onClose: () => void; onDone: () => void }) {
+  const [years, setYears] = useState<{ id: string; year_label: string }[]>([]);
+  const [sections, setSections] = useState<{ id: string; label: string }[]>([]);
+  const [promoteYear, setPromoteYear] = useState("");
+  const [promoteSection, setPromoteSection] = useState("");
+  const [sending, setSending] = useState(false);
+
+  useEffect(() => {
+    fetch("/api/academic/years").then(r => r.json()).then(d => { if (d.data?.items) setYears(d.data.items); });
+    fetch("/api/academic/sections").then(r => r.json()).then(d => { if (d.data) setSections(d.data); });
+  }, []);
+
+  async function handlePromote() {
+    if (!promoteYear || !promoteSection) return;
+    setSending(true);
+    try {
+      const r = await fetch("/api/enrollments/promote", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ student_ids: [studentId], target_academic_year_id: promoteYear, target_grade_id: "", target_section_id: promoteSection }),
+      });
+      if (!r.ok) throw new Error((await r.json().catch(()=>({}))).error || "Error");
+      onDone();
+    } catch (e) { alert(e instanceof Error ? e.message : "Error"); }
+    finally { setSending(false); }
+  }
+
+  return (
+    <div className="flex items-end gap-3 flex-wrap">
+      <div className="space-y-1">
+        <label className="text-[10px] uppercase font-medium text-white/60 block">Año destino</label>
+        <select value={promoteYear} onChange={e => setPromoteYear(e.target.value)} className="h-8 rounded border border-white/20 bg-white/10 px-2 py-1 text-xs text-white focus:outline-none focus:ring-1 focus:ring-white/40">
+          <option value="" className="text-slate-900">—</option>
+          {years.map(y => <option key={y.id} value={y.id} className="text-slate-900">{y.year_label}</option>)}
+        </select>
+      </div>
+      <div className="space-y-1">
+        <label className="text-[10px] uppercase font-medium text-white/60 block">Sección destino</label>
+        <select value={promoteSection} onChange={e => setPromoteSection(e.target.value)} className="h-8 rounded border border-white/20 bg-white/10 px-2 py-1 text-xs text-white focus:outline-none focus:ring-1 focus:ring-white/40">
+          <option value="" className="text-slate-900">—</option>
+          {sections.map(s => <option key={s.id} value={s.id} className="text-slate-900">{s.label}</option>)}
+        </select>
+      </div>
+      <button onClick={handlePromote} disabled={!promoteYear || !promoteSection || sending} className="h-8 rounded bg-emerald-500 px-3 text-xs font-medium text-white hover:bg-emerald-600 disabled:opacity-50">{sending ? "..." : "Confirmar promoción"}</button>
+      <button onClick={onClose} className="h-8 rounded border border-white/20 px-2 text-xs text-white/60 hover:text-white">Cancelar</button>
     </div>
   );
 }
