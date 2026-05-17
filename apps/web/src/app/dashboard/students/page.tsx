@@ -1,6 +1,7 @@
 import { db } from "@insti/database";
 import { getSessionContext } from "@/lib/context";
 import { StudentTable } from "@/modules/students/table";
+import { NewStudentButton } from "@/modules/students/new-student-button";
 
 interface PageProps {
   searchParams: Promise<{ search?: string; page?: string }>;
@@ -51,12 +52,7 @@ export default async function StudentsPage({ searchParams }: PageProps) {
           <h2 className="text-2xl font-bold text-slate-900">Estudiantes</h2>
           <p className="text-sm text-slate-500">{total} registrados</p>
         </div>
-        <a
-          href="/dashboard/students/new"
-          className="inline-flex items-center gap-2 rounded-md bg-[#1E3A5F] px-4 py-2 text-sm font-medium text-white hover:bg-[#2D5A8A]"
-        >
-          + Nuevo estudiante
-        </a>
+        <NewStudentButton />
       </div>
 
       <StudentTable students={students} search={search} page={page} totalPages={totalPages} />
