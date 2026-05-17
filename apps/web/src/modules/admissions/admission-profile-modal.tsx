@@ -124,20 +124,25 @@ export function AdmissionProfileModal({ admissionId, open, onClose }: Props) {
                 <UserPlus className="h-4 w-4" /> {converting ? "Convirtiendo..." : "Convertir a estudiante"}
               </button>
             )}
-            {!editing ? (
-              <>
-                <button onClick={() => setEditing(true)} className="inline-flex items-center gap-1.5 rounded-md border border-white/30 px-3 py-1.5 text-sm font-medium text-white hover:bg-white/10"><Pencil className="h-4 w-4" /> Editar</button>
-                {!confirmDelete ? (
-                  <button onClick={() => setConfirmDelete(true)} className="rounded-md p-1.5 text-white/60 hover:text-white hover:bg-white/10"><Trash2 className="h-4 w-4" /></button>
-                ) : (
-                  <div className="flex items-center gap-1">
-                    <button onClick={() => setConfirmDelete(false)} className="rounded-md px-2 py-1.5 text-xs font-medium text-white/70">No</button>
-                    <button onClick={onDelete} disabled={deleting} className="rounded-md bg-red-500 px-2 py-1.5 text-xs font-medium text-white">{deleting ? "..." : "Sí"}</button>
-                  </div>
-                )}
-              </>
-            ) : (
-              <button onClick={() => setEditing(false)} className="inline-flex items-center gap-1.5 rounded-md border border-white/30 px-3 py-1.5 text-sm font-medium text-white hover:bg-white/10">Cancelar</button>
+            {full && !["ADMITIDO","MATRICULADO","NO_ADMITIDO"].includes(full.status) && (
+              !editing ? (
+                <>
+                  <button onClick={() => setEditing(true)} className="inline-flex items-center gap-1.5 rounded-md border border-white/30 px-3 py-1.5 text-sm font-medium text-white hover:bg-white/10"><Pencil className="h-4 w-4" /> Editar</button>
+                  {!confirmDelete ? (
+                    <button onClick={() => setConfirmDelete(true)} className="rounded-md p-1.5 text-white/60 hover:text-white hover:bg-white/10"><Trash2 className="h-4 w-4" /></button>
+                  ) : (
+                    <div className="flex items-center gap-1">
+                      <button onClick={() => setConfirmDelete(false)} className="rounded-md px-2 py-1.5 text-xs font-medium text-white/70">No</button>
+                      <button onClick={onDelete} disabled={deleting} className="rounded-md bg-red-500 px-2 py-1.5 text-xs font-medium text-white">{deleting ? "..." : "Sí"}</button>
+                    </div>
+                  )}
+                </>
+              ) : (
+                <button onClick={() => setEditing(false)} className="inline-flex items-center gap-1.5 rounded-md border border-white/30 px-3 py-1.5 text-sm font-medium text-white hover:bg-white/10">Cancelar</button>
+              )
+            )}
+            {full && ["ADMITIDO","MATRICULADO","NO_ADMITIDO"].includes(full.status) && (
+              <span className="text-xs text-white/60 italic">No editable</span>
             )}
             <button onClick={onClose} className="rounded-md p-1.5 text-white/50 hover:text-white hover:bg-white/10"><X className="h-5 w-5" /></button>
           </div>

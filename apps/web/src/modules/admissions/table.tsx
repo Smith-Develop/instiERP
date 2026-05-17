@@ -17,13 +17,18 @@ export function AdmissionTable({ admissions }: { admissions: Admission[] }) {
         <thead><tr className="border-b bg-slate-50">{["Solicitante","Documento","Estado","Fecha",""].map(h=><th key={h} className="h-12 px-4 text-left text-xs font-medium uppercase text-slate-500">{h}</th>)}</tr></thead>
         <tbody>
           {admissions.length===0?<tr><td colSpan={5} className="p-8 text-center text-sm text-slate-400">No hay admisiones</td></tr>:
-            admissions.map(a=>(<tr key={a.id} className="border-b hover:bg-slate-50 cursor-pointer" onClick={()=>setSelectedId(a.id)}>
-              <td className="p-4 font-medium text-slate-900">{a.last_name}, {a.first_name}</td>
-              <td className="p-4 text-sm text-slate-500">{a.document_number??"—"}</td>
-              <td className="p-4"><span className={`inline-flex rounded-md px-2 py-0.5 text-xs font-semibold ${STATUS_COLORS[a.status]??"bg-slate-50"}`}>{STATUS_LABELS[a.status]??a.status}</span></td>
-              <td className="p-4 text-sm text-slate-500">{new Date(a.created_at).toLocaleDateString("es-ES")}</td>
-              <td className="p-4 text-right"><button onClick={(e)=>{e.stopPropagation();setSelectedId(a.id)}} className="text-sm text-[#2563EB] hover:underline">Ver</button></td>
-            </tr>))
+            admissions.map(a=>{
+              const isNotAdmitted = a.status === "NO_ADMITIDO";
+              return (
+                <tr key={a.id} className={`border-b hover:bg-slate-50 cursor-pointer ${isNotAdmitted ? "bg-red-50/60" : ""}`} onClick={()=>setSelectedId(a.id)}>
+                  <td className="p-4 font-medium text-slate-900">{a.last_name}, {a.first_name}</td>
+                  <td className="p-4 text-sm text-slate-500">{a.document_number??"—"}</td>
+                  <td className="p-4"><span className={`inline-flex rounded-md px-2 py-0.5 text-xs font-semibold ${STATUS_COLORS[a.status]??"bg-slate-50"}`}>{STATUS_LABELS[a.status]??a.status}</span></td>
+                  <td className="p-4 text-sm text-slate-500">{new Date(a.created_at).toLocaleDateString("es-ES")}</td>
+                  <td className="p-4 text-right"><button onClick={(e)=>{e.stopPropagation();setSelectedId(a.id)}} className="text-sm text-[#2563EB] hover:underline">Ver</button></td>
+                </tr>
+              );
+            })
           }
         </tbody>
       </table>
