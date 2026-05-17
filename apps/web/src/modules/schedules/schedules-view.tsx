@@ -14,8 +14,9 @@ type Schedule = { id: string; day_of_week: number; start_time: string; end_time:
 type Teacher = { id: string; first_name: string; last_name: string };
 type Subject = { id: string; name: string };
 type Section = { id: string; name: string; grade: { name: string }; grade_id: string };
+type TeacherAssign = { teacher_id: string; subject_id: string; section_id: string | null };
 
-export function SchedulesView({ schedules, teachers, subjects, sections, filterSectionId }: { schedules: Schedule[]; teachers: Teacher[]; subjects: Subject[]; sections: Section[]; filterSectionId?: string }) {
+export function SchedulesView({ schedules, teachers, subjects, sections, teacherAssignments, filterSectionId }: { schedules: Schedule[]; teachers: Teacher[]; subjects: Subject[]; sections: Section[]; teacherAssignments: TeacherAssign[]; filterSectionId?: string }) {
   const queryClient = useQueryClient();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -28,6 +29,17 @@ export function SchedulesView({ schedules, teachers, subjects, sections, filterS
   const [day, setDay] = useState("1"); const [start, setStart] = useState("08:00"); const [end, setEnd] = useState("09:00");
   const [classroom, setClassroom] = useState("");
   const [error, setError] = useState("");
+
+  // Filter subjects and sections by selected teacher's assignments
+  const teacherAssignmentIds = teacherId
+    ? teacherAssignments.filter(a => a.teacher_id === teacherId)
+    : null;
+  const filteredSubjects = teacherAssignmentIds
+    ? subjects.filter(s => teacherAssignmentIds.some(a => a.subject_id === s.id))
+    : subjects;
+  const filteredSections = teacherAssignmentIds
+    ? sections.filter(s => teacherAssignmentIds.some(a => a.section_id === s.id))
+    : sections;
 
   // Batch section form
   const [batchSection, setBatchSection] = useState("");
@@ -104,9 +116,9 @@ export function SchedulesView({ schedules, teachers, subjects, sections, filterS
             <div className="space-y-2"><Label>Día</Label><select value={day} onChange={e=>setDay(e.target.value)} className="flex h-10 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-slate-700">{DAYS.map((d,i)=><option key={i} value={i+1}>{d}</option>)}</select></div>
             <div className="space-y-2"><Label>Inicio</Label><select value={start} onChange={e=>setStart(e.target.value)} className="flex h-10 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-slate-700">{HOURS.map(h=><option key={h} value={h}>{h}</option>)}</select></div>
             <div className="space-y-2"><Label>Fin</Label><select value={end} onChange={e=>setEnd(e.target.value)} className="flex h-10 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-slate-700">{HOURS.map(h=><option key={h} value={h}>{h}</option>)}</select></div>
-            <div className="space-y-2"><Label>Profesor</Label><select value={teacherId} onChange={e=>setTeacherId(e.target.value)} className="flex h-10 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-slate-700"><option value="">—</option>{teachers.map(t=><option key={t.id} value={t.id}>{t.last_name}</option>)}</select></div>
-            <div className="space-y-2"><Label>Asignatura</Label><select value={subjectId} onChange={e=>setSubjectId(e.target.value)} className="flex h-10 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-slate-700"><option value="">—</option>{subjects.map(s=><option key={s.id} value={s.id}>{s.name}</option>)}</select></div>
-            <div className="space-y-2"><Label>Sección</Label><select value={sectionId} onChange={e=>setSectionId(e.target.value)} className="flex h-10 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-slate-700"><option value="">—</option>{sections.map(s=><option key={s.id} value={s.id}>{s.grade.name} {s.name}</option>)}</select></div>
+            <div className="space-y-2"><Label>Profesor</Label><select value={teacherId} onChange={e=>{setTeacherId(e.target.value); setSubjectId(""); setSectionId("")}} className="flex h-10 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-slate-700"><option value="">—</option>{teachers.map(t=><option key={t.id} value={t.id}>{t.last_name}</option>)}</select></div>
+            <div className="space-y-2"><Label>Asignatura {teacherId && <span className="text-xs text-slate-400">(asignadas)</span>}</Label><select value={subjectId} onChange={e=>setSubjectId(e.target.value)} className="flex h-10 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-slate-700"><option value="">—</option>{filteredSubjects.map(s=><option key={s.id} value={s.id}>{s.name}</option>)}</select>{teacherId && filteredSubjects.length===0 && <p className="text-xs text-amber-600">El profesor no tiene asignaturas asignadas.</p>}</div>
+            <div className="space-y-2"><Label>Sección {teacherId && <span className="text-xs text-slate-400">(asignadas)</span>}</Label><select value={sectionId} onChange={e=>setSectionId(e.target.value)} className="flex h-10 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-slate-700"><option value="">—</option>{filteredSections.map(s=><option key={s.id} value={s.id}>{s.grade.name} {s.name}</option>)}</select>{teacherId && filteredSections.length===0 && <p className="text-xs text-amber-600">El profesor no tiene secciones asignadas.</p>}</div>
           </div>
           <div className="flex items-end gap-3"><div className="space-y-2"><Label>Aula</Label><input value={classroom} onChange={e=>setClassroom(e.target.value)} placeholder="A101" className="flex h-10 w-32 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-slate-700"/></div><Button onClick={()=>createMutation.mutate()} disabled={!teacherId||!subjectId||!sectionId||createMutation.isPending}><Plus className="h-4 w-4"/> {createMutation.isPending?"Añadiendo...":"Añadir"}</Button></div>
           {error && <p className="text-sm text-red-600">{error}</p>}

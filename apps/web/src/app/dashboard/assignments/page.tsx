@@ -9,7 +9,7 @@ import { Plus, Trash2, Loader2 } from "lucide-react";
 type Assignment = { id: string; teacher?: { first_name: string; last_name: string }; subject?: { name: string }; grade?: { name: string }; section?: { name: string } };
 type Teacher = { id: string; first_name: string; last_name: string; specialties: string | null };
 type Subject = { id: string; name: string };
-type Section = { id: string; name: string; grade_id: string; grade?: { name: string } };
+type Section = { id: string; label: string; gradeId: string; gradeName: string };
 
 async function fetchAssignments() {
   const r = await fetch("/api/assignments");
@@ -52,7 +52,7 @@ export default function AssignmentsPage() {
         if (!section) continue;
         const r = await fetch("/api/assignments", {
           method: "POST", headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ teacher_id: teacherId, subject_id: subjectId, grade_id: section.grade_id, section_id: sectionId }),
+          body: JSON.stringify({ teacher_id: teacherId, subject_id: subjectId, grade_id: section.gradeId, section_id: sectionId }),
         });
         if (!r.ok) throw new Error((await r.json().catch(()=>({}))).error || "Error");
         results.push(r);
@@ -104,7 +104,7 @@ export default function AssignmentsPage() {
               sections.map(s => (
                 <button key={s.id} type="button" onClick={() => toggleSection(s.id)}
                   className={`inline-flex rounded-md border px-3 py-1 text-xs font-medium transition-colors ${sectionIds.has(s.id) ? "border-[#1E3A5F] bg-[#1E3A5F]/10 text-[#1E3A5F]" : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"}`}>
-                  {s.grade?.name ?? "—"} {s.name}
+                  {s.label}
                 </button>
               ))
             }
