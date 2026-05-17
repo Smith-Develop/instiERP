@@ -1,6 +1,7 @@
 import { db } from "@insti/database";
 import { getSessionContext } from "@/lib/context";
 import { TeacherTable } from "@/modules/teachers/table";
+import { NewTeacherButton } from "@/modules/teachers/new-teacher-button";
 
 export default async function TeachersPage() {
   const ctx = await getSessionContext();
@@ -23,12 +24,7 @@ export default async function TeachersPage() {
           <h2 className="text-2xl font-bold text-slate-900">Profesores</h2>
           <p className="text-sm text-slate-500">{teachers.length} registrados</p>
         </div>
-        <a
-          href="/dashboard/teachers/new"
-          className="inline-flex items-center gap-2 rounded-md bg-[#1E3A5F] px-4 py-2 text-sm font-medium text-white hover:bg-[#2D5A8A]"
-        >
-          + Nuevo profesor
-        </a>
+        <NewTeacherButton />
       </div>
 
       <TeacherTable teachers={teachers} />

@@ -936,8 +936,9 @@ model billing_plans {
   currency        String    @default("EUR")
   frequency       String    @default("MONTHLY")
   due_day         Int       @default(1)
-  is_active       Boolean   @default(true)
-  created_at      DateTime  @default(now())
+  is_active        Boolean   @default(true)
+  photo_url        String?
+  created_at       DateTime  @default(now())
   updated_at      DateTime  @updatedAt
   deleted_at      DateTime?
 
