@@ -3,12 +3,20 @@ import { db } from "@insti/database";
 import { getApiContext, guard } from "@/lib/api-context";
 import { PERMISSIONS } from "@insti/auth";
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   const ctx = await getApiContext();
   guard(ctx, PERMISSIONS.SCHEDULE_READ);
 
+  const { searchParams } = new URL(request.url);
+  const sectionId = searchParams.get("section");
+
   const items = await db.schedules.findMany({
-    where: { school_id: ctx.schoolId, academic_year_id: ctx.academicYearId, deleted_at: null },
+    where: {
+      school_id: ctx.schoolId,
+      academic_year_id: ctx.academicYearId,
+      deleted_at: null,
+      ...(sectionId ? { section_id: sectionId } : {}),
+    },
     include: {
       teacher: { select: { first_name: true, last_name: true } },
       subject: { select: { name: true } },
