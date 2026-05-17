@@ -11,6 +11,8 @@ export const studentSchema = z.object({
   medical_notes: z.string().optional(),
   emergency_contact: z.string().optional(),
   emergency_phone: z.string().optional(),
+  photo_url: z.string().optional(),
+  is_active: z.boolean().optional(),
 });
 
 export type StudentInput = z.infer<typeof studentSchema>;

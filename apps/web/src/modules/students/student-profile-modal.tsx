@@ -45,12 +45,12 @@ async function fetchDocs(entityId: string) {
   return ((await r.json()).data?.items ?? []) as Doc[];
 }
 
-function formatSize(b: number) { return b < 1024 ? `${b} B` : b < 1048576 ? `${(b/1024).toFixed(1)} KB` : `${(b/1048576).toFixed(1)} MB`; }
+function formatSize(b: number) { return b < 1024 ? `${b} B` : b < 1048576 ? `${(b / 1024).toFixed(1)} KB` : `${(b / 1048576).toFixed(1)} MB`; }
 const mimeIcon = (m: string) => m.startsWith("image/") ? Image : FileText;
 
 const SECTION_ICONS: Record<string, React.ReactNode> = {
-  personal: <User className="h-4 w-4"/>, guardians: <Users className="h-4 w-4"/>, grades: <BookOpen className="h-4 w-4"/>,
-  attendance: <ClipboardCheck className="h-4 w-4"/>, behavior: <AlertTriangle className="h-4 w-4"/>, docs: <FileText className="h-4 w-4"/>,
+  personal: <User className="h-4 w-4" />, guardians: <Users className="h-4 w-4" />, grades: <BookOpen className="h-4 w-4" />,
+  attendance: <ClipboardCheck className="h-4 w-4" />, behavior: <AlertTriangle className="h-4 w-4" />, docs: <FileText className="h-4 w-4" />,
 };
 const SECTION_LABELS: Record<string, string> = {
   personal: "Datos Personales", guardians: "Tutores", grades: "Calificaciones",
@@ -153,8 +153,8 @@ export function StudentProfileModal({ studentId, open, onClose }: Props) {
                 </div>
               )}
               <label className="absolute -bottom-2 -right-2 flex h-7 w-7 cursor-pointer items-center justify-center rounded-full bg-white text-[#1E3A5F] shadow hover:bg-slate-100">
-                {uploadingPhoto ? <Loader2 className="h-4 w-4 animate-spin"/> : <Camera className="h-4 w-4"/>}
-                <input type="file" className="hidden" accept="image/*" onChange={handlePhotoUpload} disabled={uploadingPhoto}/>
+                {uploadingPhoto ? <Loader2 className="h-4 w-4 animate-spin" /> : <Camera className="h-4 w-4" />}
+                <input type="file" className="hidden" accept="image/*" onChange={handlePhotoUpload} disabled={uploadingPhoto} />
               </label>
             </div>
             <div>
@@ -174,10 +174,10 @@ export function StudentProfileModal({ studentId, open, onClose }: Props) {
             {!editing ? (
               <>
                 <button onClick={() => setEditing(true)} className="inline-flex items-center gap-1.5 rounded-md border border-white/30 px-3 py-1.5 text-sm font-medium text-white hover:bg-white/10 transition-colors">
-                  <Pencil className="h-4 w-4"/> Editar
+                  <Pencil className="h-4 w-4" /> Editar
                 </button>
                 {!confirmDelete ? (
-                  <button onClick={() => setConfirmDelete(true)} className="rounded-md p-1.5 text-white/60 hover:text-white hover:bg-white/10 transition-colors"><Trash2 className="h-4 w-4"/></button>
+                  <button onClick={() => setConfirmDelete(true)} className="rounded-md p-1.5 text-white/60 hover:text-white hover:bg-white/10 transition-colors"><Trash2 className="h-4 w-4" /></button>
                 ) : (
                   <div className="flex items-center gap-1">
                     <button onClick={() => setConfirmDelete(false)} className="rounded-md px-2 py-1.5 text-xs font-medium text-white/70 hover:text-white hover:bg-white/10">No</button>
@@ -188,7 +188,7 @@ export function StudentProfileModal({ studentId, open, onClose }: Props) {
             ) : (
               <button onClick={() => setEditing(false)} className="inline-flex items-center gap-1.5 rounded-md border border-white/30 px-3 py-1.5 text-sm font-medium text-white hover:bg-white/10 transition-colors">Cancelar</button>
             )}
-            <button onClick={onClose} className="rounded-md p-1.5 text-white/50 hover:text-white hover:bg-white/10"><X className="h-5 w-5"/></button>
+            <button onClick={onClose} className="rounded-md p-1.5 text-white/50 hover:text-white hover:bg-white/10"><X className="h-5 w-5" /></button>
           </div>
         </div>
 
@@ -202,45 +202,45 @@ export function StudentProfileModal({ studentId, open, onClose }: Props) {
             </button>
           ))}
           <button onClick={() => { const i = sections.indexOf(activeSection); setActiveSection(sections[(i + 1) % sections.length]!); }} className="ml-auto flex items-center gap-1 px-2 py-2.5 text-xs text-slate-400 hover:text-slate-600">
-            <ChevronDown className="h-4 w-4"/>
+            <ChevronDown className="h-4 w-4" />
           </button>
         </div>
 
         {/* --- CONTENT --- */}
         <div className="flex-1 overflow-y-auto px-8 py-6">
           {isLoading ? (
-            <div className="flex items-center justify-center py-24"><Loader2 className="h-8 w-8 animate-spin text-slate-400"/></div>
+            <div className="flex items-center justify-center py-24"><Loader2 className="h-8 w-8 animate-spin text-slate-400" /></div>
           ) : error ? (
             <div className="text-sm text-red-600">Error al cargar</div>
           ) : full ? (
-            <div>
+            <div className="h-full">
               {/* PERSONAL */}
               {activeSection === "personal" && (
-                <div className="rounded-lg border bg-white p-6 max-w-2xl">
-                  <h3 className="text-base font-semibold text-slate-900 mb-4 flex items-center gap-2"><User className="h-4 w-4 text-[#1E3A5F]"/> Datos Personales</h3>
+                <div className="rounded-lg border bg-white p-6 h-full ">
+                  <h3 className="text-base font-semibold text-slate-900 mb-4 flex items-center gap-2"><User className="h-4 w-4 text-[#1E3A5F]" /> Datos Personales</h3>
                   {editing ? (
                     <form onSubmit={handleSubmit(onSave)} className="space-y-4">
                       <div className="grid gap-4 sm:grid-cols-2">
-                        <div className={F}><Label>Nombre *</Label><Input {...register("first_name")}/>{errors.first_name && <p className="text-xs text-red-600">{errors.first_name.message}</p>}</div>
-                        <div className={F}><Label>Apellidos *</Label><Input {...register("last_name")}/>{errors.last_name && <p className="text-xs text-red-600">{errors.last_name.message}</p>}</div>
+                        <div className={F}><Label>Nombre *</Label><Input {...register("first_name")} />{errors.first_name && <p className="text-xs text-red-600">{errors.first_name.message}</p>}</div>
+                        <div className={F}><Label>Apellidos *</Label><Input {...register("last_name")} />{errors.last_name && <p className="text-xs text-red-600">{errors.last_name.message}</p>}</div>
                       </div>
                       <div className="grid gap-4 sm:grid-cols-3">
                         <div className={F}><Label>Tipo doc.</Label><select {...register("document_type")} className="flex h-10 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-slate-700"><option value="">—</option><option value="DNI">DNI</option><option value="NIE">NIE</option><option value="PASAPORTE">Pasaporte</option></select></div>
-                        <div className={F}><Label>Número</Label><Input {...register("document_number")}/></div>
-                        <div className={F}><Label>Nacimiento</Label><Input type="date" {...register("birth_date")}/></div>
+                        <div className={F}><Label>Número</Label><Input {...register("document_number")} /></div>
+                        <div className={F}><Label>Nacimiento</Label><Input type="date" {...register("birth_date")} /></div>
                       </div>
                       <div className="grid gap-4 sm:grid-cols-2">
                         <div className={F}><Label>Género</Label><select {...register("gender")} className="flex h-10 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-slate-700"><option value="">—</option><option value="M">M</option><option value="F">F</option></select></div>
-                        <div className={F}><Label>Dirección</Label><Input {...register("address")}/></div>
+                        <div className={F}><Label>Dirección</Label><Input {...register("address")} /></div>
                       </div>
-                      <div className={F}><Label>Notas médicas</Label><Input {...register("medical_notes")}/></div>
-                      <div className="grid gap-4 sm:grid-cols-2"><div className={F}><Label>Contacto emergencia</Label><Input {...register("emergency_contact")}/></div><div className={F}><Label>Tel. emergencia</Label><Input type="tel" {...register("emergency_phone")}/></div></div>
-                      <div className="flex items-center gap-3"><input type="checkbox" {...register("is_active")} className="h-4 w-4"/><Label>Activo</Label></div>
+                      <div className={F}><Label>Notas médicas</Label><Input {...register("medical_notes")} /></div>
+                      <div className="grid gap-4 sm:grid-cols-2"><div className={F}><Label>Contacto emergencia</Label><Input {...register("emergency_contact")} /></div><div className={F}><Label>Tel. emergencia</Label><Input type="tel" {...register("emergency_phone")} /></div></div>
+                      <div className="flex items-center gap-3"><input type="checkbox" {...register("is_active")} className="h-4 w-4" /><Label>Activo</Label></div>
                       <Button type="submit" disabled={isSubmitting}>{isSubmitting ? "Guardando..." : "Guardar cambios"}</Button>
                     </form>
                   ) : (
                     <div className="grid grid-cols-2 gap-x-8 gap-y-4 text-sm">
-                      {[{l:"Nombre",v:`${full.first_name} ${full.last_name}`},{l:"Documento",v:full.document_number ? `${full.document_type ?? ""} ${full.document_number}` : "—"},{l:"Fecha nacimiento",v:full.birth_date ? new Date(full.birth_date).toLocaleDateString("es-ES",{dateStyle:"long"}) : "—"},{l:"Género",v:full.gender === "M" ? "Masculino" : full.gender === "F" ? "Femenino" : "—"},{l:"Dirección",v:full.address || "—"},{l:"Notas médicas",v:full.medical_notes || "—"},{l:"Contacto emergencia",v:full.emergency_contact || "—"},{l:"Tel. emergencia",v:full.emergency_phone || "—"}].map(r => (
+                      {[{ l: "Nombre", v: `${full.first_name} ${full.last_name}` }, { l: "Documento", v: full.document_number ? `${full.document_type ?? ""} ${full.document_number}` : "—" }, { l: "Fecha nacimiento", v: full.birth_date ? new Date(full.birth_date).toLocaleDateString("es-ES", { dateStyle: "long" }) : "—" }, { l: "Género", v: full.gender === "M" ? "Masculino" : full.gender === "F" ? "Femenino" : "—" }, { l: "Dirección", v: full.address || "—" }, { l: "Notas médicas", v: full.medical_notes || "—" }, { l: "Contacto emergencia", v: full.emergency_contact || "—" }, { l: "Tel. emergencia", v: full.emergency_phone || "—" }].map(r => (
                         <div key={r.l} className="flex gap-2"><span className="text-slate-400 w-36 shrink-0">{r.l}</span><span className="font-medium text-slate-900">{r.v}</span></div>
                       ))}
                     </div>
@@ -250,16 +250,16 @@ export function StudentProfileModal({ studentId, open, onClose }: Props) {
 
               {/* GUARDIANS */}
               {activeSection === "guardians" && (
-                <div className="rounded-lg border bg-white p-6 max-w-2xl">
-                  <h3 className="text-base font-semibold text-slate-900 mb-4 flex items-center gap-2"><Users className="h-4 w-4 text-[#1E3A5F]"/> Tutores</h3>
+                <div className="rounded-lg border bg-white p-6 h-full ">
+                  <h3 className="text-base font-semibold text-slate-900 mb-4 flex items-center gap-2"><Users className="h-4 w-4 text-[#1E3A5F]" /> Tutores</h3>
                   <StudentGuardians studentId={studentId} editing={editing} />
                 </div>
               )}
 
               {/* GRADES */}
               {activeSection === "grades" && (
-                <div className="rounded-lg border bg-white p-6 max-w-2xl">
-                  <h3 className="text-base font-semibold text-slate-900 mb-4 flex items-center gap-2"><BookOpen className="h-4 w-4 text-[#1E3A5F]"/> Calificaciones</h3>
+                <div className="rounded-lg border bg-white p-6 h-full ">
+                  <h3 className="text-base font-semibold text-slate-900 mb-4 flex items-center gap-2"><BookOpen className="h-4 w-4 text-[#1E3A5F]" /> Calificaciones</h3>
                   {full.student_grades?.length ? (
                     <div className="space-y-3">
                       {(() => {
@@ -286,20 +286,20 @@ export function StudentProfileModal({ studentId, open, onClose }: Props) {
 
               {/* ATTENDANCE */}
               {activeSection === "attendance" && (
-                <div className="rounded-lg border bg-white p-6 max-w-2xl">
-                  <h3 className="text-base font-semibold text-slate-900 mb-4 flex items-center gap-2"><ClipboardCheck className="h-4 w-4 text-[#1E3A5F]"/> Asistencia</h3>
+                <div className="rounded-lg border bg-white p-6 h-full ">
+                  <h3 className="text-base font-semibold text-slate-900 mb-4 flex items-center gap-2"><ClipboardCheck className="h-4 w-4 text-[#1E3A5F]" /> Asistencia</h3>
                   {full.attendances?.length ? (
                     <div>
                       <div className="flex gap-6 mb-4 text-sm">
-                        <div className="flex items-center gap-2"><div className="h-3 w-3 rounded-full bg-emerald-500"/> <span className="font-medium text-emerald-700">{full.attendances.filter(a=>a.status==="PRESENTE").length}</span> <span className="text-slate-500">presentes</span></div>
-                        <div className="flex items-center gap-2"><div className="h-3 w-3 rounded-full bg-red-500"/> <span className="font-medium text-red-700">{full.attendances.filter(a=>a.status==="AUSENTE").length}</span> <span className="text-slate-500">ausentes</span></div>
-                        <div className="flex items-center gap-2"><div className="h-3 w-3 rounded-full bg-amber-500"/> <span className="font-medium text-amber-700">{full.attendances.filter(a=>a.status==="TARDANZA").length}</span> <span className="text-slate-500">tardanzas</span></div>
+                        <div className="flex items-center gap-2"><div className="h-3 w-3 rounded-full bg-emerald-500" /> <span className="font-medium text-emerald-700">{full.attendances.filter(a => a.status === "PRESENTE").length}</span> <span className="text-slate-500">presentes</span></div>
+                        <div className="flex items-center gap-2"><div className="h-3 w-3 rounded-full bg-red-500" /> <span className="font-medium text-red-700">{full.attendances.filter(a => a.status === "AUSENTE").length}</span> <span className="text-slate-500">ausentes</span></div>
+                        <div className="flex items-center gap-2"><div className="h-3 w-3 rounded-full bg-amber-500" /> <span className="font-medium text-amber-700">{full.attendances.filter(a => a.status === "TARDANZA").length}</span> <span className="text-slate-500">tardanzas</span></div>
                       </div>
                       <div className="space-y-1">
                         {full.attendances.slice(0, 30).map(a => (
                           <div key={a.id} className="flex items-center justify-between rounded-md border px-4 py-2 text-sm">
                             <span>{new Date(a.date).toLocaleDateString("es-ES", { dateStyle: "long" })}</span>
-                            <span className={`inline-flex rounded px-2 py-0.5 text-xs font-semibold ${a.status==="PRESENTE"?"bg-emerald-50 text-emerald-700":a.status==="AUSENTE"?"bg-red-50 text-red-700":a.status==="TARDANZA"?"bg-amber-50 text-amber-700":"bg-blue-50 text-blue-700"}`}>{a.status}</span>
+                            <span className={`inline-flex rounded px-2 py-0.5 text-xs font-semibold ${a.status === "PRESENTE" ? "bg-emerald-50 text-emerald-700" : a.status === "AUSENTE" ? "bg-red-50 text-red-700" : a.status === "TARDANZA" ? "bg-amber-50 text-amber-700" : "bg-blue-50 text-blue-700"}`}>{a.status}</span>
                           </div>
                         ))}
                       </div>
@@ -310,14 +310,14 @@ export function StudentProfileModal({ studentId, open, onClose }: Props) {
 
               {/* BEHAVIOR */}
               {activeSection === "behavior" && (
-                <div className="rounded-lg border bg-white p-6 max-w-2xl">
-                  <h3 className="text-base font-semibold text-slate-900 mb-4 flex items-center gap-2"><AlertTriangle className="h-4 w-4 text-[#1E3A5F]"/> Conducta</h3>
+                <div className="rounded-lg border bg-white p-6 h-full ">
+                  <h3 className="text-base font-semibold text-slate-900 mb-4 flex items-center gap-2"><AlertTriangle className="h-4 w-4 text-[#1E3A5F]" /> Conducta</h3>
                   {full.behavior_reports?.length ? (
                     <div className="space-y-2">
                       {full.behavior_reports.map(r => (
                         <div key={r.id} className="rounded-md border bg-slate-50 px-5 py-4">
                           <div className="flex items-center gap-2 mb-2">
-                            <span className={`inline-flex rounded px-2 py-0.5 text-xs font-semibold ${r.severity==="GRAVE"?"bg-red-50 text-red-700":r.severity==="MODERADO"?"bg-amber-50 text-amber-700":"bg-blue-50 text-blue-700"}`}>{r.type}</span>
+                            <span className={`inline-flex rounded px-2 py-0.5 text-xs font-semibold ${r.severity === "GRAVE" ? "bg-red-50 text-red-700" : r.severity === "MODERADO" ? "bg-amber-50 text-amber-700" : "bg-blue-50 text-blue-700"}`}>{r.type}</span>
                             <span className="text-xs text-slate-400">{new Date(r.created_at).toLocaleDateString("es-ES", { dateStyle: "long" })}</span>
                           </div>
                           <p className="text-sm text-slate-600">{r.description}</p>
@@ -330,16 +330,16 @@ export function StudentProfileModal({ studentId, open, onClose }: Props) {
 
               {/* DOCUMENTS */}
               {activeSection === "docs" && (
-                <div className="rounded-lg border bg-white p-6 max-w-2xl">
-                  <h3 className="text-base font-semibold text-slate-900 mb-4 flex items-center gap-2"><FileText className="h-4 w-4 text-[#1E3A5F]"/> Documentos</h3>
+                <div className="rounded-lg border bg-white p-6 h-full ">
+                  <h3 className="text-base font-semibold text-slate-900 mb-4 flex items-center gap-2"><FileText className="h-4 w-4 text-[#1E3A5F]" /> Documentos</h3>
                   <div className="space-y-4">
                     <div className="flex items-end gap-3">
                       <div className="flex-1 space-y-1.5"><Label>Nombre del documento</Label><Input value={docName} onChange={e => setDocName(e.target.value)} placeholder="Ej: DNI frente, Certificado médico..." /></div>
                       <div className="space-y-1.5">
                         <Label>Archivo</Label>
                         <div className="flex gap-2">
-                          <input ref={fileInputRef} type="file" className="flex h-10 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm file:mr-3 file:rounded file:border-0 file:bg-[#1E3A5F] file:px-3 file:py-1 file:text-xs file:font-medium file:text-white" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"/>
-                          <Button onClick={handleDocUpload} disabled={!fileInputRef.current?.files?.[0] || uploadingDoc} className="gap-1 shrink-0">{uploadingDoc ? <Loader2 className="h-4 w-4 animate-spin"/> : <Upload className="h-4 w-4"/>} Subir</Button>
+                          <input ref={fileInputRef} type="file" className="flex h-10 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm file:mr-3 file:rounded file:border-0 file:bg-[#1E3A5F] file:px-3 file:py-1 file:text-xs file:font-medium file:text-white" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" />
+                          <Button onClick={handleDocUpload} disabled={!fileInputRef.current?.files?.[0] || uploadingDoc} className="gap-1 shrink-0">{uploadingDoc ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />} Subir</Button>
                         </div>
                       </div>
                     </div>
@@ -353,12 +353,12 @@ export function StudentProfileModal({ studentId, open, onClose }: Props) {
                             return (
                               <div key={doc.id} className="flex items-center justify-between rounded-md border bg-slate-50 px-4 py-3 hover:border-slate-300 transition-colors">
                                 <div className="flex items-center gap-3 min-w-0">
-                                  <Icon className="h-5 w-5 shrink-0 text-slate-400"/>
+                                  <Icon className="h-5 w-5 shrink-0 text-slate-400" />
                                   <div className="min-w-0"><p className="text-sm font-medium text-slate-900 truncate">{doc.original_name}</p><p className="text-xs text-slate-400">{formatSize(doc.size_bytes)} · {new Date(doc.created_at).toLocaleDateString("es-ES")}</p></div>
                                 </div>
                                 <div className="flex items-center gap-1 shrink-0 ml-3">
-                                  <a href={doc.url} target="_blank" rel="noopener noreferrer" className="rounded-md p-1.5 text-slate-400 hover:text-[#2563EB] hover:bg-slate-50" title="Descargar"><Download className="h-4 w-4"/></a>
-                                  <button onClick={() => deleteDoc(doc.id)} className="rounded-md p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50" title="Eliminar"><Trash2 className="h-4 w-4"/></button>
+                                  <a href={doc.url} target="_blank" rel="noopener noreferrer" className="rounded-md p-1.5 text-slate-400 hover:text-[#2563EB] hover:bg-slate-50" title="Descargar"><Download className="h-4 w-4" /></a>
+                                  <button onClick={() => deleteDoc(doc.id)} className="rounded-md p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50" title="Eliminar"><Trash2 className="h-4 w-4" /></button>
                                 </div>
                               </div>
                             );
