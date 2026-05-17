@@ -1,20 +1,83 @@
-import { db } from "@insti/database";
-import { getSessionContext } from "@/lib/context";
-import { AssignmentsView } from "@/modules/assignments/assignments-view";
+"use client";
 
-export default async function AssignmentsPage() {
-  const ctx = await getSessionContext();
+import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@insti/ui";
+import { Button, Label } from "@insti/ui";
+import { Plus, Trash2, Loader2 } from "lucide-react";
 
-  const [assignments, teachers, subjects, sections] = await Promise.all([
-    db.teacher_assignments.findMany({
-      where: { school_id: ctx.schoolId, deleted_at: null },
-      include: { teacher: { select: { first_name: true, last_name: true } }, subject: true, grade: true, section: true },
-      orderBy: { created_at: "desc" },
-    }),
-    db.teachers.findMany({ where: { school_id: ctx.schoolId, deleted_at: null }, select: { id: true, first_name: true, last_name: true }, orderBy: { last_name: "asc" } }),
-    db.subjects.findMany({ where: { school_id: ctx.schoolId, deleted_at: null }, select: { id: true, name: true }, orderBy: { name: "asc" } }),
-    db.sections.findMany({ where: { school_id: ctx.schoolId, deleted_at: null }, include: { grade: true }, orderBy: [{ grade: { sort_order: "asc" } }, { sort_order: "asc" }] }),
+type Assignment = { id: string; teacher: { first_name: string; last_name: string }; subject: { name: string }; grade: { name: string }; section: { name: string } | null };
+type Teacher = { id: string; first_name: string; last_name: string };
+type Subject = { id: string; name: string };
+type Section = { id: string; name: string; grade_id: string; grade: { name: string } };
+
+async function fetchAssignments() {
+  const r = await fetch("/api/assignments");
+  return (await r.json()).data.items as Assignment[];
+}
+
+async function fetchFormData() {
+  const [teachersR, subjectsR, sectionsR] = await Promise.all([
+    fetch("/api/teachers"), fetch("/api/subjects"), fetch("/api/academic/sections"),
   ]);
+  const [tD, sD, secD] = await Promise.all([teachersR.json(), subjectsR.json(), sectionsR.json()]);
+  return { teachers: tD.data?.items as Teacher[] ?? [], subjects: sD.data?.items as Subject[] ?? [], sections: secD.data as Section[] ?? [] };
+}
 
-  return <AssignmentsView assignments={assignments} teachers={teachers} subjects={subjects} sections={sections} />;
+export default function AssignmentsPage() {
+  const queryClient = useQueryClient();
+  const [teacherId, setTeacherId] = useState(""); const [subjectId, setSubjectId] = useState("");
+  const [sectionId, setSectionId] = useState(""); const [error, setError] = useState("");
+
+  const { data: assignments = [], isLoading } = useQuery({ queryKey: ["assignments-list"], queryFn: fetchAssignments });
+  const { data: formData } = useQuery({ queryKey: ["assignments-form"], queryFn: fetchFormData });
+  const teachers = formData?.teachers ?? []; const subjects = formData?.subjects ?? []; const sections = formData?.sections ?? [];
+
+  const createMutation = useMutation({
+    mutationFn: async () => {
+      const section = sections.find(s => s.id === sectionId);
+      if (!section) throw new Error("Sección no encontrada");
+      const r = await fetch("/api/assignments", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ teacher_id: teacherId, subject_id: subjectId, grade_id: section.grade_id, section_id: sectionId }) });
+      if (!r.ok) throw new Error((await r.json().catch(()=>({}))).error || "Error");
+    },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["assignments-list"] }); setTeacherId(""); setSubjectId(""); setSectionId(""); setError(""); },
+    onError: (e: Error) => setError(e.message),
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => { await fetch(`/api/assignments/${id}`, { method: "DELETE" }); },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["assignments-list"] }),
+  });
+
+  return (
+    <div className="space-y-6">
+      <div><h2 className="text-2xl font-bold text-slate-900">Asignaciones</h2><p className="text-sm text-slate-500">{assignments.length} asignaciones</p></div>
+
+      <Card><CardHeader><CardTitle className="text-base">Nueva asignación</CardTitle></CardHeader><CardContent className="space-y-4">
+        <div className="grid gap-4 sm:grid-cols-3">
+          <div className="space-y-2"><Label>Profesor</Label><select value={teacherId} onChange={e=>setTeacherId(e.target.value)} className="flex h-10 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-slate-700"><option value="">Seleccionar</option>{teachers.map(t=><option key={t.id} value={t.id}>{t.last_name}, {t.first_name}</option>)}</select></div>
+          <div className="space-y-2"><Label>Asignatura</Label><select value={subjectId} onChange={e=>setSubjectId(e.target.value)} className="flex h-10 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-slate-700"><option value="">Seleccionar</option>{subjects.map(s=><option key={s.id} value={s.id}>{s.name}</option>)}</select></div>
+          <div className="space-y-2"><Label>Sección</Label><select value={sectionId} onChange={e=>setSectionId(e.target.value)} className="flex h-10 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-slate-700"><option value="">Seleccionar</option>{sections.map(s=><option key={s.id} value={s.id}>{s.grade.name} {s.name}</option>)}</select></div>
+        </div>
+        {error && <p className="text-sm text-red-600">{error}</p>}
+      </CardContent><CardFooter className="border-t pt-4"><Button onClick={()=>createMutation.mutate()} disabled={!teacherId||!subjectId||!sectionId||createMutation.isPending}><Plus className="h-4 w-4"/> {createMutation.isPending?"Creando...":"Asignar"}</Button></CardFooter></Card>
+
+      <div className="rounded-lg border border-slate-200 bg-white">
+        {isLoading ? <div className="flex items-center justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-slate-400"/></div> :
+        <table className="w-full">
+          <thead><tr className="border-b bg-slate-50">{["Profesor","Asignatura","Grado/Sección",""].map(h=><th key={h} className="h-12 px-4 text-left text-xs font-medium uppercase text-slate-500">{h}</th>)}</tr></thead>
+          <tbody>
+            {assignments.length===0?<tr><td colSpan={4} className="p-8 text-center text-sm text-slate-400">Sin asignaciones</td></tr>:
+              assignments.map(a=>(<tr key={a.id} className="border-b hover:bg-slate-50">
+                <td className="p-4 text-sm font-medium">{a.teacher.last_name}, {a.teacher.first_name}</td>
+                <td className="p-4 text-sm text-slate-500">{a.subject.name}</td>
+                <td className="p-4 text-sm text-slate-500">{a.grade.name}{a.section?` ${a.section.name}`:""}</td>
+                <td className="p-4 text-right"><button onClick={()=>deleteMutation.mutate(a.id)} disabled={deleteMutation.isPending&&deleteMutation.variables===a.id} className="rounded p-1 text-slate-400 hover:text-red-600"><Trash2 className="h-4 w-4"/></button></td>
+              </tr>))
+            }
+          </tbody>
+        </table>}
+      </div>
+    </div>
+  );
 }
