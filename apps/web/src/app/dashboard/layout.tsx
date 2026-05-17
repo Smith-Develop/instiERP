@@ -57,6 +57,7 @@ const allNavGroups: NavGroup[] = [
       { href: "/dashboard/teachers", icon: GraduationCap, label: "Profesores", permission: PERMISSIONS.TEACHERS_READ },
       { href: "/dashboard/guardians", icon: UserRound, label: "Tutores", permission: PERMISSIONS.GUARDIANS_READ },
       { href: "/dashboard/admissions", icon: UserPlus, label: "Admisiones", permission: PERMISSIONS.ADMISSIONS_READ },
+      { href: "/dashboard/promotions", icon: ArrowLeftRight, label: "Promociones", permission: PERMISSIONS.ENROLLMENTS_WRITE },
     ],
   },
   {
@@ -98,6 +99,35 @@ const allNavGroups: NavGroup[] = [
   },
 ];
 
+const profesorNavGroups: NavGroup[] = [
+  {
+    title: "Mi Aula",
+    items: [
+      { href: "/dashboard/schedules", icon: Clock, label: "Horarios", permission: PERMISSIONS.SCHEDULE_READ },
+      { href: "/dashboard/classroom", icon: Monitor, label: "Aula Virtual", permission: PERMISSIONS.ASSIGNMENTS_READ },
+      { href: "/dashboard/attendance", icon: ClipboardCheck, label: "Asistencia", permission: PERMISSIONS.ATTENDANCE_READ },
+      { href: "/dashboard/grades", icon: BookOpen, label: "Calificaciones", permission: PERMISSIONS.GRADES_READ },
+      { href: "/dashboard/behavior", icon: AlertTriangle, label: "Conducta", permission: PERMISSIONS.BEHAVIOR_READ },
+    ],
+  },
+  {
+    title: "Comunicación",
+    items: [
+      { href: "/dashboard/communication", icon: Bell, label: "Anuncios", permission: PERMISSIONS.COMMUNICATION_READ },
+      { href: "/dashboard/messages", icon: MessageSquare, label: "Mensajes", permission: PERMISSIONS.COMMUNICATION_READ },
+      { href: "/dashboard/calendar", icon: Calendar, label: "Calendario", permission: PERMISSIONS.SCHEDULE_READ },
+    ],
+  },
+  {
+    title: "Utilidades",
+    items: [
+      { href: "/dashboard/students", icon: Users, label: "Estudiantes", permission: PERMISSIONS.STUDENTS_READ },
+      { href: "/dashboard/analytics", icon: TrendingUp, label: "Analytics", permission: PERMISSIONS.AI_READ },
+      { href: "/dashboard/documents", icon: HardDrive, label: "Documentos", permission: PERMISSIONS.STUDENTS_READ },
+    ],
+  },
+];
+
 export default async function DashboardLayout({
   children,
 }: {
@@ -106,7 +136,9 @@ export default async function DashboardLayout({
   const session = await getServerSession();
   const role = (session?.user.role ?? "SUPER_ADMIN") as Role;
 
-  const navItems = allNavGroups.map((group) => ({
+  const baseGroups = role === "PROFESOR" ? profesorNavGroups : allNavGroups;
+
+  const navItems = baseGroups.map((group) => ({
     ...group,
     items: group.items.filter((item) => hasPermission(role, item.permission)),
   })).filter((group) => group.items.length > 0);

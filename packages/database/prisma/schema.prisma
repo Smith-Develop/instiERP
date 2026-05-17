@@ -107,6 +107,7 @@ model schools {
 
   academic_years    academic_years[]
   academic_levels   academic_levels[]
+  academic_periods  academic_periods[]
   grades            grades[]
   user_schools      user_schools[]
   students          students[]
@@ -137,6 +138,7 @@ model academic_years {
   behavior_reports behavior_reports[]
   invoices         invoices[]
   schedules        schedules[]
+  academic_periods academic_periods[]
 
   @@unique([school_id, year_label])
   @@index([school_id])
@@ -181,18 +183,43 @@ model academic_levels {
   @@map("academic_levels")
 }
 
+model academic_periods {
+  id               String    @id @default(uuid()) @db.Uuid
+  school_id        String    @db.Uuid
+  academic_year_id String    @db.Uuid
+  name             String
+  code             String
+  sort_order       Int       @default(0)
+  start_date       DateTime?
+  end_date         DateTime?
+  created_at       DateTime  @default(now())
+  updated_at       DateTime  @updatedAt
+  deleted_at       DateTime?
+
+  school        schools        @relation(fields: [school_id], references: [id])
+  academic_year academic_years @relation(fields: [academic_year_id], references: [id])
+
+  @@unique([school_id, academic_year_id, code])
+  @@index([school_id])
+  @@index([academic_year_id])
+  @@map("academic_periods")
+}
+
 model grades {
   id                String    @id @default(uuid()) @db.Uuid
   academic_level_id String    @db.Uuid
   school_id         String    @db.Uuid
   name              String
   sort_order        Int       @default(0)
+  next_grade_id     String?   @db.Uuid
   created_at        DateTime  @default(now())
   updated_at        DateTime  @updatedAt
   deleted_at        DateTime?
 
   academic_level      academic_levels     @relation(fields: [academic_level_id], references: [id])
   school              schools             @relation(fields: [school_id], references: [id])
+  next_grade          grades?             @relation("GradeProgression", fields: [next_grade_id], references: [id])
+  previous_grade      grades[]            @relation("GradeProgression")
   sections            sections[]
   enrollments         enrollments[]
   teacher_assignments teacher_assignments[]

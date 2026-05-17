@@ -55,12 +55,16 @@ export async function POST(request: NextRequest) {
 
     // Auto-create grade_item for sync
     if (body.points) {
+      const firstPeriod = await db.academic_periods.findFirst({
+        where: { school_id: ctx.schoolId, academic_year_id: ctx.academicYearId, deleted_at: null },
+        orderBy: { sort_order: "asc" },
+      });
       const gradeItem = await db.grade_items.create({
         data: {
           school_id: ctx.schoolId, academic_year_id: ctx.academicYearId,
           subject_id: body.subject_id, grade_id: body.grade_id, section_id: body.section_id || null,
           name: `Tarea: ${body.title}`, weight: Number(body.points),
-          period: "TRIMESTRE_1",
+          period: firstPeriod?.code ?? "TRIMESTRE_1",
         },
       });
       await db.classroom_assignments.update({

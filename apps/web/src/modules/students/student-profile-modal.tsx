@@ -23,6 +23,14 @@ type Attendance = { id: string; date: string; status: string };
 type Behavior = { id: string; type: string; severity: string | null; description: string; created_at: string };
 type Doc = { id: string; original_name: string; url: string; mime_type: string; size_bytes: number; created_at: string };
 
+type YearOption = { id: string; label: string };
+type HistoryData = {
+  enrollments: { academic_year_id: string; academic_year: { year_label: string }; grade: { name: string }; section: { name: string } }[];
+  gradesByYear: Record<string, { yearLabel: string; subjects: Record<string, { subjectName: string; items: { name: string; period: string; score: number | null }[] }> }>;
+  attendanceByYear: Record<string, { yearLabel: string; presente: number; ausente: number; tardanza: number }>;
+  behaviorByYear: Record<string, { yearLabel: string; reports: { type: string; severity: string | null; description: string; date: string }[] }>;
+};
+
 const editSchema = z.object({
   first_name: z.string().min(1), last_name: z.string().min(1),
   document_type: z.string().optional(), document_number: z.string().optional(),
@@ -69,6 +77,7 @@ export function StudentProfileModal({ studentId, open, onClose }: Props) {
   const [activeSection, setActiveSection] = useState("personal");
   const [uploadingDoc, setUploadingDoc] = useState(false);
   const [docName, setDocName] = useState("");
+  const [selectedYear, setSelectedYear] = useState<string>("");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const { data: full, isLoading, error } = useQuery({
@@ -82,6 +91,44 @@ export function StudentProfileModal({ studentId, open, onClose }: Props) {
     queryFn: () => fetchDocs(studentId),
     enabled: open && !!studentId,
   });
+
+  const { data: history } = useQuery({
+    queryKey: ["student-history", studentId],
+    queryFn: async () => {
+      const r = await fetch(`/api/students/${studentId}/history`);
+      return ((await r.json()).data) as HistoryData;
+    },
+    enabled: open && !!studentId,
+  });
+
+  const yearOptions: YearOption[] = history?.enrollments?.map(e => ({ id: e.academic_year_id, label: e.academic_year.year_label })) ?? [];
+
+  // Filtered data for selected year
+  const showHistoryYear = selectedYear && history;
+  const historyAttendance: Attendance[] = showHistoryYear
+    ? Object.entries(history.attendanceByYear).find(([k]) => k === selectedYear)?.[1]
+      ? [{ id: "hist-pres", date: "", status: "PRESENTE" }] // placeholder; actual attendance comes from API
+      : []
+    : [];
+  const historyBehavior: Behavior[] = showHistoryYear
+    ? (history.behaviorByYear[selectedYear]?.reports ?? []).map(r => ({ id: "", type: r.type, severity: r.severity, description: r.description, created_at: r.date }))
+    : [];
+
+  // Convert history grades to StudentGrade-compatible format
+  const historyGrades: StudentGrade[] = showHistoryYear
+    ? Object.values(history.gradesByYear[selectedYear]?.subjects ?? {}).flatMap(s =>
+        s.items.map(i => ({ id: `${s.subjectName}-${i.name}`, score: i.score?.toString() ?? null, grade_item: { id: `${s.subjectName}-${i.name}`, name: `${s.subjectName}: ${i.name}`, weight: "1" } }))
+      )
+    : [];
+
+  const displayAttendances = showHistoryYear ? historyAttendance : full?.attendances ?? [];
+  const displayBehavior = showHistoryYear ? historyBehavior : full?.behavior_reports ?? [];
+  const displayGrades = showHistoryYear ? historyGrades : full?.student_grades ?? [];
+
+  // Get selected year's grade + section
+  const selectedEnrollment = showHistoryYear
+    ? history?.enrollments.find(e => e.academic_year_id === selectedYear)
+    : null;
 
   const { register, handleSubmit, formState: { errors, isSubmitting }, reset } = useForm<EditForm>({ resolver: zodResolver(editSchema) });
 
@@ -167,6 +214,26 @@ export function StudentProfileModal({ studentId, open, onClose }: Props) {
                 {full?.gender && <span>{full.gender === "M" ? "Masculino" : full.gender === "F" ? "Femenino" : full.gender}</span>}
                 {full?.admitted_at && <span>Adm. {new Date(full.admitted_at).toLocaleDateString("es-ES")}</span>}
               </div>
+              {yearOptions.length > 1 && (
+                <div className="mt-2">
+                  <select
+                    value={selectedYear}
+                    onChange={e => setSelectedYear(e.target.value)}
+                    className="h-8 rounded-md border border-white/30 bg-white/10 px-2 py-1 text-xs text-white focus:outline-none focus:ring-1 focus:ring-white/50"
+                  >
+                    <option value="">Año actual</option>
+                    {yearOptions.map(y => (
+                      <option key={y.id} value={y.id} className="text-slate-900">{y.label}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
+              {showHistoryYear && selectedEnrollment && (
+                <div className="flex gap-3 mt-1 text-xs text-white/60">
+                  <span>{selectedEnrollment.grade.name} {selectedEnrollment.section.name}</span>
+                  <span>{selectedEnrollment.academic_year.year_label}</span>
+                </div>
+              )}
               <span className={`inline-flex rounded-md px-2 py-0.5 mt-2 text-xs font-semibold ${full?.is_active ? "bg-emerald-400/20 text-emerald-200" : "bg-red-400/20 text-red-200"}`}>
                 {full?.is_active ? "Activo" : "Inactivo"}
               </span>
@@ -261,14 +328,14 @@ export function StudentProfileModal({ studentId, open, onClose }: Props) {
               {/* GRADES */}
               {activeSection === "grades" && (
                 <div className="rounded-lg border bg-white p-6 h-full ">
-                  <h3 className="text-base font-semibold text-slate-900 mb-4 flex items-center gap-2"><BookOpen className="h-4 w-4 text-[#1E3A5F]" /> Calificaciones</h3>
-                  {full.student_grades?.length ? (
+                  <h3 className="text-base font-semibold text-slate-900 mb-4 flex items-center gap-2"><BookOpen className="h-4 w-4 text-[#1E3A5F]" /> Calificaciones {showHistoryYear && <span className="text-xs font-normal text-slate-400">· Histórico</span>}</h3>
+                  {displayGrades?.length ? (
                     <div className="grid gap-6 lg:grid-cols-2">
                       {/* Chart */}
                       <div>
                         <h4 className="text-xs font-medium text-slate-500 mb-2 uppercase">Rendimiento por criterio</h4>
                         <ResponsiveContainer width="100%" height={200}>
-                          <BarChart data={(()=>{const m=new Map<string,number[]>();for(const g of full.student_grades){if(g.score!=null){const k=g.grade_item.name;if(!m.has(k))m.set(k,[]);m.get(k)!.push(Number(g.score))}}return[...m.entries()].map(([k,v])=>({name:k,promedio:v.reduce((a,b)=>a+b,0)/v.length}))})()}>
+                          <BarChart data={(()=>{const m=new Map<string,number[]>();for(const g of displayGrades){if(g.score!=null){const k=g.grade_item.name;if(!m.has(k))m.set(k,[]);m.get(k)!.push(Number(g.score))}}return[...m.entries()].map(([k,v])=>({name:k,promedio:v.reduce((a,b)=>a+b,0)/v.length}))})()}>
                             <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0"/>
                             <XAxis dataKey="name" tick={{fontSize:10}}/>
                             <YAxis domain={[0,10]} tick={{fontSize:10}}/>
@@ -280,7 +347,7 @@ export function StudentProfileModal({ studentId, open, onClose }: Props) {
                       {/* List */}
                       <div className="space-y-2">
                         <h4 className="text-xs font-medium text-slate-500 mb-2 uppercase">Detalle</h4>
-                        {(()=>{const m=new Map<string,StudentGrade[]>();for(const g of full.student_grades){const k=g.grade_item.name;if(!m.has(k))m.set(k,[]);m.get(k)!.push(g)}return[...m.entries()]})().map(([name,grades])=>(
+                        {(()=>{const m=new Map<string,StudentGrade[]>();for(const g of displayGrades){const k=g.grade_item.name;if(!m.has(k))m.set(k,[]);m.get(k)!.push(g)}return[...m.entries()]})().map(([name,grades])=>(
                           <div key={name} className="rounded-md border bg-slate-50 px-4 py-3"><p className="text-xs font-semibold text-slate-700 mb-1.5">{name}</p><div className="flex flex-wrap gap-1.5">{grades.map(g=><span key={g.id} className="inline-flex rounded border bg-white px-2 py-0.5 text-xs"><span className={`font-bold ${g.score&&Number(g.score)>=5?"text-emerald-600":"text-red-600"}`}>{g.score?Number(g.score).toFixed(1):"—"}</span></span>)}</div></div>
                         ))}
                       </div>
@@ -292,15 +359,21 @@ export function StudentProfileModal({ studentId, open, onClose }: Props) {
               {/* ATTENDANCE */}
               {activeSection === "attendance" && (
                 <div className="rounded-lg border bg-white p-6 h-full ">
-                  <h3 className="text-base font-semibold text-slate-900 mb-4 flex items-center gap-2"><ClipboardCheck className="h-4 w-4 text-[#1E3A5F]" /> Asistencia</h3>
-                  {full.attendances?.length ? (
+                  <h3 className="text-base font-semibold text-slate-900 mb-4 flex items-center gap-2"><ClipboardCheck className="h-4 w-4 text-[#1E3A5F]" /> Asistencia {showHistoryYear && <span className="text-xs font-normal text-slate-400">· Resumen histórico</span>}</h3>
+                  {showHistoryYear && history?.attendanceByYear[selectedYear] ? (
+                    <div className="grid grid-cols-3 gap-4 text-center">
+                      {[{label:"Presente",value:history.attendanceByYear[selectedYear].presente,color:"text-emerald-600"},{label:"Ausente",value:history.attendanceByYear[selectedYear].ausente,color:"text-red-600"},{label:"Tardanza",value:history.attendanceByYear[selectedYear].tardanza,color:"text-amber-600"}].map(s=>(
+                        <div key={s.label} className="rounded-lg border bg-slate-50 p-4"><p className={`text-3xl font-bold ${s.color}`}>{s.value}</p><p className="text-xs text-slate-500 mt-1">{s.label}</p></div>
+                      ))}
+                    </div>
+                  ) : displayAttendances?.length ? (
                     <div className="grid gap-6 lg:grid-cols-2">
                       {/* Pie Chart */}
                       <div>
                         <h4 className="text-xs font-medium text-slate-500 mb-2 uppercase">Distribución</h4>
                         <ResponsiveContainer width="100%" height={200}>
                           <PieChart>
-                            <Pie data={[{name:"Presente",value:full.attendances.filter(a=>a.status==="PRESENTE").length},{name:"Ausente",value:full.attendances.filter(a=>a.status==="AUSENTE").length},{name:"Tardanza",value:full.attendances.filter(a=>a.status==="TARDANZA").length}]} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={70} label={({name,percent})=>`${name} ${((percent??0)*100).toFixed(0)}%`}>
+                            <Pie data={[{name:"Presente",value:displayAttendances.filter(a=>a.status==="PRESENTE").length},{name:"Ausente",value:displayAttendances.filter(a=>a.status==="AUSENTE").length},{name:"Tardanza",value:displayAttendances.filter(a=>a.status==="TARDANZA").length}]} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={70} label={({name,percent})=>`${name} ${((percent??0)*100).toFixed(0)}%`}>
                               <Cell fill="#059669"/><Cell fill="#DC2626"/><Cell fill="#D97706"/>
                             </Pie>
                             <Tooltip/>
@@ -310,7 +383,7 @@ export function StudentProfileModal({ studentId, open, onClose }: Props) {
                       {/* List */}
                       <div className="space-y-1 overflow-y-auto max-h-[250px]">
                         <h4 className="text-xs font-medium text-slate-500 mb-2 uppercase">Historial</h4>
-                        {full.attendances.slice(0,30).map(a=>(<div key={a.id} className="flex items-center justify-between rounded-md border px-3 py-1.5 text-sm"><span>{new Date(a.date).toLocaleDateString("es-ES",{dateStyle:"long"})}</span><span className={`inline-flex rounded px-2 py-0.5 text-xs font-semibold ${a.status==="PRESENTE"?"bg-emerald-50 text-emerald-700":a.status==="AUSENTE"?"bg-red-50 text-red-700":a.status==="TARDANZA"?"bg-amber-50 text-amber-700":"bg-blue-50 text-blue-700"}`}>{a.status}</span></div>))}
+                        {displayAttendances.slice(0,30).map(a=>(<div key={a.id} className="flex items-center justify-between rounded-md border px-3 py-1.5 text-sm"><span>{new Date(a.date).toLocaleDateString("es-ES",{dateStyle:"long"})}</span><span className={`inline-flex rounded px-2 py-0.5 text-xs font-semibold ${a.status==="PRESENTE"?"bg-emerald-50 text-emerald-700":a.status==="AUSENTE"?"bg-red-50 text-red-700":a.status==="TARDANZA"?"bg-amber-50 text-amber-700":"bg-blue-50 text-blue-700"}`}>{a.status}</span></div>))}
                       </div>
                     </div>
                   ) : <p className="text-sm text-slate-400">Sin registros de asistencia.</p>}
@@ -320,14 +393,14 @@ export function StudentProfileModal({ studentId, open, onClose }: Props) {
               {/* BEHAVIOR */}
               {activeSection === "behavior" && (
                 <div className="rounded-lg border bg-white p-6 h-full ">
-                  <h3 className="text-base font-semibold text-slate-900 mb-4 flex items-center gap-2"><AlertTriangle className="h-4 w-4 text-[#1E3A5F]" /> Conducta</h3>
-                  {full.behavior_reports?.length ? (
+                  <h3 className="text-base font-semibold text-slate-900 mb-4 flex items-center gap-2"><AlertTriangle className="h-4 w-4 text-[#1E3A5F]" /> Conducta {showHistoryYear && <span className="text-xs font-normal text-slate-400">· Histórico</span>}</h3>
+                  {displayBehavior?.length ? (
                     <div className="grid gap-6 lg:grid-cols-2">
                       {/* Chart */}
                       <div>
                         <h4 className="text-xs font-medium text-slate-500 mb-2 uppercase">Resumen</h4>
                         <ResponsiveContainer width="100%" height={200}>
-                          <BarChart data={(()=>{const m=new Map<string,number>();for(const r of full.behavior_reports){m.set(r.type,(m.get(r.type)??0)+1)}return[...m.entries()].map(([k,v])=>({name:k,count:v}))})()}>
+                          <BarChart data={(()=>{const m=new Map<string,number>();for(const r of displayBehavior){m.set(r.type,(m.get(r.type)??0)+1)}return[...m.entries()].map(([k,v])=>({name:k,count:v}))})()}>
                             <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0"/>
                             <XAxis dataKey="name" tick={{fontSize:10}}/>
                             <YAxis allowDecimals={false} tick={{fontSize:10}}/>
@@ -339,7 +412,7 @@ export function StudentProfileModal({ studentId, open, onClose }: Props) {
                       {/* List */}
                       <div className="space-y-2 overflow-y-auto max-h-[250px]">
                         <h4 className="text-xs font-medium text-slate-500 mb-2 uppercase">Historial</h4>
-                        {full.behavior_reports.map(r=>(<div key={r.id} className="rounded-md border bg-slate-50 px-4 py-3"><div className="flex items-center gap-2 mb-1"><span className={`inline-flex rounded px-2 py-0.5 text-xs font-semibold ${r.severity==="GRAVE"?"bg-red-50 text-red-700":r.severity==="MODERADO"?"bg-amber-50 text-amber-700":"bg-blue-50 text-blue-700"}`}>{r.type}</span><span className="text-xs text-slate-400">{new Date(r.created_at).toLocaleDateString("es-ES",{dateStyle:"long"})}</span></div><p className="text-sm text-slate-600">{r.description}</p></div>))}
+                        {displayBehavior.map(r=>(<div key={r.id} className="rounded-md border bg-slate-50 px-4 py-3"><div className="flex items-center gap-2 mb-1"><span className={`inline-flex rounded px-2 py-0.5 text-xs font-semibold ${r.severity==="GRAVE"?"bg-red-50 text-red-700":r.severity==="MODERADO"?"bg-amber-50 text-amber-700":"bg-blue-50 text-blue-700"}`}>{r.type}</span><span className="text-xs text-slate-400">{new Date(r.created_at).toLocaleDateString("es-ES",{dateStyle:"long"})}</span></div><p className="text-sm text-slate-600">{r.description}</p></div>))}
                       </div>
                     </div>
                   ) : <p className="text-sm text-slate-400">Sin reportes de conducta.</p>}

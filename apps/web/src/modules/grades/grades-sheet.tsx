@@ -33,8 +33,19 @@ export function GradesSheet({ sections, subjects, schoolId, academicYearId }: Pr
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState("");
+  const [periods, setPeriods] = useState<{ code: string; name: string }[]>([]);
 
   const selectedSection = sections.find((s) => s.id === sectionId);
+
+  // Load periods
+  useEffect(() => {
+    fetch("/api/academic/periods")
+      .then(r => r.json())
+      .then(d => { if (d.data?.items) setPeriods(d.data.items.map((p: { code: string; name: string }) => ({ code: p.code, name: p.name }))); })
+      .catch(() => {});
+  }, []);
+
+  const defaultPeriod = periods.length > 0 ? (periods[0]?.code ?? "TRIMESTRE_1") : "TRIMESTRE_1";
 
   // Load grade items for the subject + grade
   const loadGradeItems = useCallback(async () => {
@@ -139,7 +150,7 @@ export function GradesSheet({ sections, subjects, schoolId, academicYearId }: Pr
         academicYearId,
         name,
         weight: Number(weight),
-        period: "TRIMESTRE_1",
+        period: defaultPeriod,
       }),
     });
 

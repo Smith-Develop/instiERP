@@ -4,6 +4,7 @@ import { useForm } from "react-hook-form";
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@insti/ui";
 import { Button, Input, Label } from "@insti/ui";
 import { Building2, CreditCard } from "lucide-react";
+import { PeriodsManager } from "./periods-manager";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 
@@ -90,6 +91,8 @@ export function SettingsForm({ school, academicYears }: { school: SchoolData | n
       </Card>
 
       <Card><CardHeader><CardTitle>Años lectivos</CardTitle></CardHeader><CardContent><div className="space-y-2">{academicYears.map(y=><div key={y.id} className="flex items-center justify-between rounded-md border border-slate-200 px-4 py-3"><div><p className="font-medium text-slate-900">{y.year_label}</p><p className="text-sm text-slate-500">{new Date(y.start_date).toLocaleDateString("es-ES")} — {new Date(y.end_date).toLocaleDateString("es-ES")}</p></div><span className={`inline-flex rounded-md px-2 py-0.5 text-xs font-semibold ${y.is_active?"bg-emerald-50 text-emerald-700":"bg-slate-100 text-slate-600"}`}>{y.is_active?"Activo":"Inactivo"}</span></div>)}</div></CardContent></Card>
+
+      <PeriodsManager />
     </div>
   );
 }

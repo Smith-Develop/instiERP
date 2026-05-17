@@ -20,6 +20,7 @@ export function ReportsView({
   const [downloadingSection, setDownloadingSection] = useState<string | null>(null);
   const [downloadingCert, setDownloadingCert] = useState<string | null>(null);
   const [closedPeriods, setClosedPeriods] = useState<Set<string>>(new Set());
+  const [periods, setPeriods] = useState<{ code: string; name: string }[]>([]);
   const [closingGrade, setClosingGrade] = useState(sections[0]?.gradeId ?? sections[0]?.id ?? "");
   const [toggling, setToggling] = useState<string | null>(null);
 
@@ -32,6 +33,18 @@ export function ReportsView({
   }, [closingGrade]);
 
   useEffect(() => { loadClosedPeriods(); }, [loadClosedPeriods]);
+
+  // Fetch configured periods
+  useEffect(() => {
+    fetch("/api/academic/periods")
+      .then(r => r.json())
+      .then(d => {
+        if (d.data?.items) setPeriods(d.data.items.map((p: { code: string; name: string }) => ({ code: p.code, name: p.name })));
+      })
+      .catch(() => setPeriods([{ code: "TRIMESTRE_1", name: "Trimestre 1" }, { code: "TRIMESTRE_2", name: "Trimestre 2" }, { code: "TRIMESTRE_3", name: "Trimestre 3" }]));
+  }, []);
+
+  const periodButtons = periods.length > 0 ? periods : [{ code: "TRIMESTRE_1", name: "Trimestre 1" }, { code: "TRIMESTRE_2", name: "Trimestre 2" }, { code: "TRIMESTRE_3", name: "Trimestre 3" }];
 
   async function downloadBoletin(sectionId: string) {
     setDownloadingSection(sectionId);
@@ -129,18 +142,18 @@ export function ReportsView({
           </div>
         </div>
         <div className="flex flex-wrap gap-3">
-          {["TRIMESTRE_1", "TRIMESTRE_2", "TRIMESTRE_3"].map((period) => {
-            const checkClosed = closedPeriods.has(period);
+          {periodButtons.map((period) => {
+            const checkClosed = closedPeriods.has(period.code);
             return (
               <Button
-                key={period}
+                key={period.code}
                 variant={checkClosed ? "default" : "outline"}
-                onClick={() => togglePeriodClose(period, !checkClosed)}
-                disabled={toggling === period}
+                onClick={() => togglePeriodClose(period.code, !checkClosed)}
+                disabled={toggling === period.code}
                 className="gap-2"
               >
-                {toggling === period ? <Loader2 className="h-4 w-4 animate-spin" /> : checkClosed ? <Lock className="h-4 w-4" /> : <Unlock className="h-4 w-4" />}
-                {period.replace("_", " ")}
+                {toggling === period.code ? <Loader2 className="h-4 w-4 animate-spin" /> : checkClosed ? <Lock className="h-4 w-4" /> : <Unlock className="h-4 w-4" />}
+                {period.name}
               </Button>
             );
           })}
