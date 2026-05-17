@@ -35,6 +35,7 @@ export async function POST(request: NextRequest) {
         medical_notes: admission.medical_notes ?? undefined,
         emergency_contact: admission.emergency_contact ?? undefined,
         emergency_phone: admission.emergency_phone ?? undefined,
+        admitted_at: new Date(),
       },
     });
 

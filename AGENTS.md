@@ -132,10 +132,3 @@ El `DocumentList` y los modales tienen campo `docName` + file input. El archivo 
 | Storage | `apps/web/src/lib/storage.ts` |
 | Email | `apps/web/src/lib/email.ts` |
 | Auditoría | `apps/web/src/lib/audit.ts` |
-
-## Stats
-
-```
-79 páginas | 70+ API routes | 44+ modelos DB | 33+ permisos RBAC
-20 unit tests | 9 E2E tests | 34 commits
-```

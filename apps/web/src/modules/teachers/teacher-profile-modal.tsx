@@ -35,10 +35,10 @@ async function fetchDocs(entityId: string) {
   return ((await r.json()).data?.items ?? []) as Doc[];
 }
 
-function formatSize(b: number) { return b < 1024 ? `${b} B` : b < 1048576 ? `${(b/1024).toFixed(1)} KB` : `${(b/1048576).toFixed(1)} MB`; }
+function formatSize(b: number) { return b < 1024 ? `${b} B` : b < 1048576 ? `${(b / 1024).toFixed(1)} KB` : `${(b / 1048576).toFixed(1)} MB`; }
 const mimeIcon = (m: string) => m.startsWith("image/") ? Image : FileText;
 
-const DAYS = ["Lunes","Martes","Miércoles","Jueves","Viernes","Sábado"];
+const DAYS = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
 
 type Props = { teacherId: string; open: boolean; onClose: () => void };
 
@@ -65,11 +65,26 @@ export function TeacherProfileModal({ teacherId, open, onClose }: Props) {
     enabled: open && !!teacherId,
   });
 
-  const { register, handleSubmit, formState: { errors, isSubmitting }, reset } = useForm<EditForm>({ resolver: zodResolver(editSchema) });
+  const { data: allSubjects = [] } = useQuery({
+    queryKey: ["subjects-brief"],
+    queryFn: async () => { const r = await fetch("/api/subjects"); return ((await r.json()).data?.items ?? []) as { id: string; name: string }[]; },
+    enabled: open,
+  });
+
+  const [selectedSubjects, setSelectedSubjects] = useState<Set<string>>(new Set());
+
+  const { register, handleSubmit, formState: { errors, isSubmitting }, reset, setValue } = useForm<EditForm>({ resolver: zodResolver(editSchema) });
 
   useEffect(() => {
-    if (full) reset({ first_name: full.first_name, last_name: full.last_name, specialties: full.specialties ?? "", is_active: full.is_active });
-  }, [full, reset]);
+    if (full) {
+      reset({ first_name: full.first_name, last_name: full.last_name, specialties: full.specialties ?? "", is_active: full.is_active });
+      if (full.specialties && allSubjects.length > 0) {
+        const names = full.specialties.split(",").map(s=>s.trim());
+        const ids = new Set(allSubjects.filter(s=>names.includes(s.name)).map(s=>s.id));
+        setSelectedSubjects(ids);
+      }
+    }
+  }, [full, reset, allSubjects]);
 
   async function onSave(data: EditForm) {
     await fetch(`/api/teachers/${teacherId}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data) });
@@ -108,10 +123,10 @@ export function TeacherProfileModal({ teacherId, open, onClose }: Props) {
 
   const sections = ["personal", "subjects", "schedule", "docs"];
   const SectionIcon = ({ s }: { s: string }) => {
-    switch(s) { case "personal": return <User className="h-4 w-4"/>; case "subjects": return <BookOpen className="h-4 w-4"/>; case "schedule": return <Clock className="h-4 w-4"/>; default: return <FileText className="h-4 w-4"/>; }
+    switch (s) { case "personal": return <User className="h-4 w-4" />; case "subjects": return <BookOpen className="h-4 w-4" />; case "schedule": return <Clock className="h-4 w-4" />; default: return <FileText className="h-4 w-4" />; }
   };
   const SectionLabel = ({ s }: { s: string }) => {
-    switch(s) { case "personal": return "Datos"; case "subjects": return "Asignaturas"; case "schedule": return "Horario"; default: return "Docs"; }
+    switch (s) { case "personal": return "Datos"; case "subjects": return "Asignaturas"; case "schedule": return "Horario"; default: return "Docs"; }
   };
 
   const assignments = full?.teacher_assignments ?? [];
@@ -131,8 +146,8 @@ export function TeacherProfileModal({ teacherId, open, onClose }: Props) {
                 <div className="flex h-20 w-20 items-center justify-center rounded-lg bg-white/15 text-white text-3xl font-bold border-2 border-white/30">{full?.first_name?.[0]}{full?.last_name?.[0]}</div>
               )}
               <label className="absolute -bottom-2 -right-2 flex h-7 w-7 cursor-pointer items-center justify-center rounded-full bg-white text-[#1E3A5F] shadow hover:bg-slate-100">
-                {uploadingPhoto ? <Loader2 className="h-4 w-4 animate-spin"/> : <Camera className="h-4 w-4"/>}
-                <input type="file" className="hidden" accept="image/*" onChange={handlePhotoUpload} disabled={uploadingPhoto}/>
+                {uploadingPhoto ? <Loader2 className="h-4 w-4 animate-spin" /> : <Camera className="h-4 w-4" />}
+                <input type="file" className="hidden" accept="image/*" onChange={handlePhotoUpload} disabled={uploadingPhoto} />
               </label>
             </div>
             <div>
@@ -144,9 +159,9 @@ export function TeacherProfileModal({ teacherId, open, onClose }: Props) {
           <div className="flex items-center gap-2">
             {!editing ? (
               <>
-                <button onClick={() => setEditing(true)} className="inline-flex items-center gap-1.5 rounded-md border border-white/30 px-3 py-1.5 text-sm font-medium text-white hover:bg-white/10"><Pencil className="h-4 w-4"/> Editar</button>
+                <button onClick={() => setEditing(true)} className="inline-flex items-center gap-1.5 rounded-md border border-white/30 px-3 py-1.5 text-sm font-medium text-white hover:bg-white/10"><Pencil className="h-4 w-4" /> Editar</button>
                 {!confirmDelete ? (
-                  <button onClick={() => setConfirmDelete(true)} className="rounded-md p-1.5 text-white/60 hover:text-white hover:bg-white/10"><Trash2 className="h-4 w-4"/></button>
+                  <button onClick={() => setConfirmDelete(true)} className="rounded-md p-1.5 text-white/60 hover:text-white hover:bg-white/10"><Trash2 className="h-4 w-4" /></button>
                 ) : (
                   <div className="flex items-center gap-1">
                     <button onClick={() => setConfirmDelete(false)} className="rounded-md px-2 py-1.5 text-xs font-medium text-white/70 hover:text-white hover:bg-white/10">No</button>
@@ -157,7 +172,7 @@ export function TeacherProfileModal({ teacherId, open, onClose }: Props) {
             ) : (
               <button onClick={() => setEditing(false)} className="inline-flex items-center gap-1.5 rounded-md border border-white/30 px-3 py-1.5 text-sm font-medium text-white hover:bg-white/10">Cancelar</button>
             )}
-            <button onClick={onClose} className="rounded-md p-1.5 text-white/50 hover:text-white hover:bg-white/10"><X className="h-5 w-5"/></button>
+            <button onClick={onClose} className="rounded-md p-1.5 text-white/50 hover:text-white hover:bg-white/10"><X className="h-5 w-5" /></button>
           </div>
         </div>
 
@@ -165,7 +180,7 @@ export function TeacherProfileModal({ teacherId, open, onClose }: Props) {
         <div className="shrink-0 flex border-b bg-slate-50 px-8 overflow-x-auto">
           {sections.map(s => (
             <button key={s} onClick={() => setActiveSection(s)} className={`flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${activeSection === s ? "border-[#1E3A5F] text-[#1E3A5F]" : "border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300"}`}>
-              <SectionIcon s={s}/> <SectionLabel s={s}/>
+              <SectionIcon s={s} /> <SectionLabel s={s} />
             </button>
           ))}
         </div>
@@ -173,39 +188,50 @@ export function TeacherProfileModal({ teacherId, open, onClose }: Props) {
         {/* CONTENT */}
         <div className="flex-1 overflow-y-auto px-8 py-6">
           {isLoading ? (
-            <div className="flex items-center justify-center py-24"><Loader2 className="h-8 w-8 animate-spin text-slate-400"/></div>
+            <div className="flex items-center justify-center py-24"><Loader2 className="h-8 w-8 animate-spin text-slate-400" /></div>
           ) : full ? (
-            <div>
+            <div className="h-full">
               {activeSection === "personal" && (
-                <div className="rounded-lg border bg-white p-6 max-w-2xl">
-                  <h3 className="text-base font-semibold text-slate-900 mb-4 flex items-center gap-2"><User className="h-4 w-4 text-[#1E3A5F]"/> Datos Personales</h3>
+                <div className="rounded-lg border bg-white p-6 h-full">
+                  <h3 className="text-base font-semibold text-slate-900 mb-4 flex items-center gap-2"><User className="h-4 w-4 text-[#1E3A5F]" /> Datos Personales</h3>
                   {editing ? (
                     <form onSubmit={handleSubmit(onSave)} className="space-y-4">
                       <div className="grid gap-4 sm:grid-cols-2">
-                        <div className="space-y-1.5"><Label>Nombre *</Label><Input {...register("first_name")}/>{errors.first_name && <p className="text-xs text-red-600">{errors.first_name.message}</p>}</div>
-                        <div className="space-y-1.5"><Label>Apellidos *</Label><Input {...register("last_name")}/>{errors.last_name && <p className="text-xs text-red-600">{errors.last_name.message}</p>}</div>
+                        <div className="space-y-1.5"><Label>Nombre *</Label><Input {...register("first_name")} />{errors.first_name && <p className="text-xs text-red-600">{errors.first_name.message}</p>}</div>
+                        <div className="space-y-1.5"><Label>Apellidos *</Label><Input {...register("last_name")} />{errors.last_name && <p className="text-xs text-red-600">{errors.last_name.message}</p>}</div>
                       </div>
-                      <div className="space-y-1.5"><Label>Especialidades</Label><Input {...register("specialties")} placeholder="Matemáticas, Física"/></div>
-                      <div className="flex items-center gap-3"><input type="checkbox" {...register("is_active")} className="h-4 w-4"/><Label>Activo</Label></div>
+                      <div className="space-y-1.5">
+                        <Label>Especialidades</Label>
+                        <div className="flex flex-wrap gap-2 max-h-32 overflow-y-auto border rounded-md p-3">
+                          {allSubjects.map(s=>{
+                            const sel = selectedSubjects.has(s.id);
+                            return (
+                              <button key={s.id} type="button" onClick={()=>{const ns=new Set(selectedSubjects);sel?ns.delete(s.id):ns.add(s.id);setSelectedSubjects(ns);const names=[...ns].map(sid=>allSubjects.find(x=>x.id===sid)?.name??"").filter(Boolean).join(", ");setValue("specialties",names)}} className={`inline-flex rounded-md border px-3 py-1 text-xs font-medium transition-colors ${sel?"border-[#1E3A5F] bg-[#1E3A5F]/10 text-[#1E3A5F]":"border-slate-200 bg-white text-slate-600 hover:bg-slate-50"}`}>{s.name}</button>
+                            );
+                          })}
+                        </div>
+                        <input type="hidden" {...register("specialties")}/>
+                      </div>
+                      <div className="flex items-center gap-3"><input type="checkbox" {...register("is_active")} className="h-4 w-4" /><Label>Activo</Label></div>
                       <Button type="submit" disabled={isSubmitting}>{isSubmitting ? "Guardando..." : "Guardar"}</Button>
                     </form>
                   ) : (
                     <div className="grid grid-cols-2 gap-x-8 gap-y-4 text-sm">
-                      {[{l:"Nombre",v:`${full.first_name} ${full.last_name}`},{l:"Especialidades",v:full.specialties || "—"},{l:"Estado",v:full.is_active ? "Activo" : "Inactivo"}].map(r=><div key={r.l} className="flex gap-2"><span className="text-slate-400 w-36 shrink-0">{r.l}</span><span className="font-medium text-slate-900">{r.v}</span></div>)}
+                      {[{ l: "Nombre", v: `${full.first_name} ${full.last_name}` }, { l: "Especialidades", v: full.specialties || "—" }, { l: "Estado", v: full.is_active ? "Activo" : "Inactivo" }].map(r => <div key={r.l} className="flex gap-2"><span className="text-slate-400 w-36 shrink-0">{r.l}</span><span className="font-medium text-slate-900">{r.v}</span></div>)}
                     </div>
                   )}
                 </div>
               )}
 
               {activeSection === "subjects" && (
-                <div className="rounded-lg border bg-white p-6 max-w-2xl">
-                  <h3 className="text-base font-semibold text-slate-900 mb-4 flex items-center gap-2"><BookOpen className="h-4 w-4 text-[#1E3A5F]"/> Asignaturas</h3>
+                <div className="rounded-lg border bg-white p-6 h-full">
+                  <h3 className="text-base font-semibold text-slate-900 mb-4 flex items-center gap-2"><BookOpen className="h-4 w-4 text-[#1E3A5F]" /> Asignaturas</h3>
                   {assignments.length ? (
                     <div className="space-y-2">
                       {assignments.map(a => (
                         <div key={a.id} className="flex items-center justify-between rounded-md border bg-slate-50 px-5 py-3">
                           <div><p className="font-medium text-slate-900">{a.subject.name}</p><p className="text-xs text-slate-500">{a.grade.name}{a.section ? ` · ${a.section.name}` : ""}</p></div>
-                          <GraduationCap className="h-4 w-4 text-slate-400"/>
+                          <GraduationCap className="h-4 w-4 text-slate-400" />
                         </div>
                       ))}
                     </div>
@@ -215,8 +241,8 @@ export function TeacherProfileModal({ teacherId, open, onClose }: Props) {
               )}
 
               {activeSection === "schedule" && (
-                <div className="rounded-lg border bg-white p-6 max-w-2xl">
-                  <h3 className="text-base font-semibold text-slate-900 mb-4 flex items-center gap-2"><Clock className="h-4 w-4 text-[#1E3A5F]"/> Horario</h3>
+                <div className="rounded-lg border bg-white p-6 h-full">
+                  <h3 className="text-base font-semibold text-slate-900 mb-4 flex items-center gap-2"><Clock className="h-4 w-4 text-[#1E3A5F]" /> Horario</h3>
                   {schedules.length ? (
                     <div className="space-y-2">
                       {schedules.map(s => (
@@ -231,18 +257,18 @@ export function TeacherProfileModal({ teacherId, open, onClose }: Props) {
               )}
 
               {activeSection === "docs" && (
-                <div className="rounded-lg border bg-white p-6 max-w-2xl">
-                  <h3 className="text-base font-semibold text-slate-900 mb-4 flex items-center gap-2"><FileText className="h-4 w-4 text-[#1E3A5F]"/> Documentos</h3>
+                <div className="rounded-lg border bg-white p-6 h-full">
+                  <h3 className="text-base font-semibold text-slate-900 mb-4 flex items-center gap-2"><FileText className="h-4 w-4 text-[#1E3A5F]" /> Documentos</h3>
                   <div className="space-y-4">
                     <div className="flex items-end gap-3">
-                      <div className="flex-1 space-y-1.5"><Label>Nombre</Label><Input value={docName} onChange={e=>setDocName(e.target.value)} placeholder="Ej: CV, Título..."/></div>
+                      <div className="flex-1 space-y-1.5"><Label>Nombre</Label><Input value={docName} onChange={e => setDocName(e.target.value)} placeholder="Ej: CV, Título..." /></div>
                       <div className="space-y-1.5"><Label>Archivo</Label>
-                        <div className="flex gap-2"><input ref={fileInputRef} type="file" className="flex h-10 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm file:mr-3 file:rounded file:border-0 file:bg-[#1E3A5F] file:px-3 file:py-1 file:text-xs file:font-medium file:text-white" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"/><Button onClick={handleDocUpload} disabled={!fileInputRef.current?.files?.[0]||uploadingDoc} className="gap-1 shrink-0">{uploadingDoc?<Loader2 className="h-4 w-4 animate-spin"/>:<Upload className="h-4 w-4"/>}Subir</Button></div>
+                        <div className="flex gap-2"><input ref={fileInputRef} type="file" className="flex h-10 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm file:mr-3 file:rounded file:border-0 file:bg-[#1E3A5F] file:px-3 file:py-1 file:text-xs file:font-medium file:text-white" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" /><Button onClick={handleDocUpload} disabled={!fileInputRef.current?.files?.[0] || uploadingDoc} className="gap-1 shrink-0">{uploadingDoc ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}Subir</Button></div>
                       </div>
                     </div>
                     <div className="border-t pt-4">
-                      {docs.length===0 ? <p className="text-sm text-slate-400 text-center py-8">Sin documentos.</p> :
-                        docs.map(doc=>{const Icon=mimeIcon(doc.mime_type);return(<div key={doc.id} className="flex items-center justify-between rounded-md border bg-slate-50 px-4 py-3"><div className="flex items-center gap-3"><Icon className="h-5 w-5 text-slate-400"/><div><p className="text-sm font-medium text-slate-900 truncate">{doc.original_name}</p><p className="text-xs text-slate-400">{formatSize(doc.size_bytes)} · {new Date(doc.created_at).toLocaleDateString("es-ES")}</p></div></div><div className="flex gap-1"><a href={doc.url} target="_blank" className="rounded-md p-1.5 text-slate-400 hover:text-[#2563EB]" title="Descargar"><Download className="h-4 w-4"/></a><button onClick={()=>deleteDoc(doc.id)} className="rounded-md p-1.5 text-slate-400 hover:text-red-600"><Trash2 className="h-4 w-4"/></button></div></div>)})}
+                      {docs.length === 0 ? <p className="text-sm text-slate-400 text-center py-8">Sin documentos.</p> :
+                        docs.map(doc => { const Icon = mimeIcon(doc.mime_type); return (<div key={doc.id} className="flex items-center justify-between rounded-md border bg-slate-50 px-4 py-3"><div className="flex items-center gap-3"><Icon className="h-5 w-5 text-slate-400" /><div><p className="text-sm font-medium text-slate-900 truncate">{doc.original_name}</p><p className="text-xs text-slate-400">{formatSize(doc.size_bytes)} · {new Date(doc.created_at).toLocaleDateString("es-ES")}</p></div></div><div className="flex gap-1"><a href={doc.url} target="_blank" className="rounded-md p-1.5 text-slate-400 hover:text-[#2563EB]" title="Descargar"><Download className="h-4 w-4" /></a><button onClick={() => deleteDoc(doc.id)} className="rounded-md p-1.5 text-slate-400 hover:text-red-600"><Trash2 className="h-4 w-4" /></button></div></div>) })}
                     </div>
                   </div>
                 </div>
@@ -251,7 +277,7 @@ export function TeacherProfileModal({ teacherId, open, onClose }: Props) {
           ) : null}
         </div>
 
-        <div className="shrink-0 border-t bg-slate-50 px-8 py-3 text-xs text-slate-400 flex items-center justify-between"><span>Expediente #{teacherId?.slice(0,8)}</span><span>Insti ERP</span></div>
+        <div className="shrink-0 border-t bg-slate-50 px-8 py-3 text-xs text-slate-400 flex items-center justify-between"><span>Expediente #{teacherId?.slice(0, 8)}</span><span>Insti ERP</span></div>
       </div>
     </div>
   );

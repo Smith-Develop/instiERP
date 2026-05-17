@@ -243,6 +243,7 @@ model students {
   emergency_phone     String?
   is_active           Boolean   @default(true)
   photo_url           String?
+  admitted_at         DateTime?
   created_at          DateTime  @default(now())
   updated_at          DateTime  @updatedAt
   deleted_at          DateTime?

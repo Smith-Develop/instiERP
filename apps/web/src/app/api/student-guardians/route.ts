@@ -3,17 +3,22 @@ import { db } from "@insti/database";
 import { getApiContext, guard } from "@/lib/api-context";
 import { PERMISSIONS } from "@insti/auth";
 
-// GET: list student-guardian links for a student
+// GET: list student-guardian links for a student or guardian
 export async function GET(request: NextRequest) {
   const ctx = await getApiContext();
   guard(ctx, PERMISSIONS.STUDENTS_READ);
   const { searchParams } = new URL(request.url);
   const studentId = searchParams.get("studentId");
-  if (!studentId) return NextResponse.json({ error: "studentId requerido" }, { status: 400 });
+  const guardianId = searchParams.get("guardianId");
+
+  const where: Record<string, unknown> = { deleted_at: null };
+  if (studentId) where.student_id = studentId;
+  else if (guardianId) where.guardian_id = guardianId;
+  else return NextResponse.json({ error: "studentId o guardianId requerido" }, { status: 400 });
 
   const links = await db.student_guardians.findMany({
-    where: { student_id: studentId, deleted_at: null },
-    include: { guardian: true },
+    where: where as never,
+    include: { guardian: true, student: { select: { id: true, first_name: true, last_name: true } } },
   });
   return NextResponse.json({ success: true, data: { items: links } });
 }

@@ -8,6 +8,7 @@ import { Button, Input, Label } from "@insti/ui";
 import { z } from "zod";
 import { X, Pencil, Trash2, Loader2, Camera, Download, Upload, Image, FileText, ChevronDown, User, Users, BookOpen, ClipboardCheck, AlertTriangle } from "lucide-react";
 import { StudentGuardians } from "@/modules/guardians/student-guardians";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 
 type StudentFull = {
   id: string; first_name: string; last_name: string; document_type: string | null; document_number: string | null;
@@ -261,24 +262,27 @@ export function StudentProfileModal({ studentId, open, onClose }: Props) {
                 <div className="rounded-lg border bg-white p-6 h-full ">
                   <h3 className="text-base font-semibold text-slate-900 mb-4 flex items-center gap-2"><BookOpen className="h-4 w-4 text-[#1E3A5F]" /> Calificaciones</h3>
                   {full.student_grades?.length ? (
-                    <div className="space-y-3">
-                      {(() => {
-                        const map = new Map<string, StudentGrade[]>();
-                        for (const g of full.student_grades) { const k = g.grade_item.name; if (!map.has(k)) map.set(k, []); map.get(k)!.push(g); }
-                        return [...map.entries()];
-                      })().map(([name, grades]) => (
-                        <div key={name} className="rounded-md border bg-slate-50 px-5 py-4">
-                          <h4 className="text-sm font-semibold text-slate-700 mb-3">{name}</h4>
-                          <div className="flex flex-wrap gap-2">
-                            {grades.map(g => (
-                              <span key={g.id} className="inline-flex items-center gap-1 rounded-md border bg-white px-3 py-1.5 text-sm">
-                                <span className="text-slate-400 text-xs">Nota:</span>
-                                <span className={`font-bold ${g.score && Number(g.score) >= 5 ? "text-emerald-600" : "text-red-600"}`}>{g.score ? Number(g.score).toFixed(1) : "—"}</span>
-                              </span>
-                            ))}
-                          </div>
-                        </div>
-                      ))}
+                    <div className="grid gap-6 lg:grid-cols-2">
+                      {/* Chart */}
+                      <div>
+                        <h4 className="text-xs font-medium text-slate-500 mb-2 uppercase">Rendimiento por criterio</h4>
+                        <ResponsiveContainer width="100%" height={200}>
+                          <BarChart data={(()=>{const m=new Map<string,number[]>();for(const g of full.student_grades){if(g.score!=null){const k=g.grade_item.name;if(!m.has(k))m.set(k,[]);m.get(k)!.push(Number(g.score))}}return[...m.entries()].map(([k,v])=>({name:k,promedio:v.reduce((a,b)=>a+b,0)/v.length}))})()}>
+                            <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0"/>
+                            <XAxis dataKey="name" tick={{fontSize:10}}/>
+                            <YAxis domain={[0,10]} tick={{fontSize:10}}/>
+                            <Tooltip/>
+                            <Bar dataKey="promedio" fill="#2563EB" radius={[4,4,0,0]}/>
+                          </BarChart>
+                        </ResponsiveContainer>
+                      </div>
+                      {/* List */}
+                      <div className="space-y-2">
+                        <h4 className="text-xs font-medium text-slate-500 mb-2 uppercase">Detalle</h4>
+                        {(()=>{const m=new Map<string,StudentGrade[]>();for(const g of full.student_grades){const k=g.grade_item.name;if(!m.has(k))m.set(k,[]);m.get(k)!.push(g)}return[...m.entries()]})().map(([name,grades])=>(
+                          <div key={name} className="rounded-md border bg-slate-50 px-4 py-3"><p className="text-xs font-semibold text-slate-700 mb-1.5">{name}</p><div className="flex flex-wrap gap-1.5">{grades.map(g=><span key={g.id} className="inline-flex rounded border bg-white px-2 py-0.5 text-xs"><span className={`font-bold ${g.score&&Number(g.score)>=5?"text-emerald-600":"text-red-600"}`}>{g.score?Number(g.score).toFixed(1):"—"}</span></span>)}</div></div>
+                        ))}
+                      </div>
                     </div>
                   ) : <p className="text-sm text-slate-400">Sin calificaciones registradas.</p>}
                 </div>
@@ -289,19 +293,23 @@ export function StudentProfileModal({ studentId, open, onClose }: Props) {
                 <div className="rounded-lg border bg-white p-6 h-full ">
                   <h3 className="text-base font-semibold text-slate-900 mb-4 flex items-center gap-2"><ClipboardCheck className="h-4 w-4 text-[#1E3A5F]" /> Asistencia</h3>
                   {full.attendances?.length ? (
-                    <div>
-                      <div className="flex gap-6 mb-4 text-sm">
-                        <div className="flex items-center gap-2"><div className="h-3 w-3 rounded-full bg-emerald-500" /> <span className="font-medium text-emerald-700">{full.attendances.filter(a => a.status === "PRESENTE").length}</span> <span className="text-slate-500">presentes</span></div>
-                        <div className="flex items-center gap-2"><div className="h-3 w-3 rounded-full bg-red-500" /> <span className="font-medium text-red-700">{full.attendances.filter(a => a.status === "AUSENTE").length}</span> <span className="text-slate-500">ausentes</span></div>
-                        <div className="flex items-center gap-2"><div className="h-3 w-3 rounded-full bg-amber-500" /> <span className="font-medium text-amber-700">{full.attendances.filter(a => a.status === "TARDANZA").length}</span> <span className="text-slate-500">tardanzas</span></div>
+                    <div className="grid gap-6 lg:grid-cols-2">
+                      {/* Pie Chart */}
+                      <div>
+                        <h4 className="text-xs font-medium text-slate-500 mb-2 uppercase">Distribución</h4>
+                        <ResponsiveContainer width="100%" height={200}>
+                          <PieChart>
+                            <Pie data={[{name:"Presente",value:full.attendances.filter(a=>a.status==="PRESENTE").length},{name:"Ausente",value:full.attendances.filter(a=>a.status==="AUSENTE").length},{name:"Tardanza",value:full.attendances.filter(a=>a.status==="TARDANZA").length}]} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={70} label={({name,percent})=>`${name} ${((percent??0)*100).toFixed(0)}%`}>
+                              <Cell fill="#059669"/><Cell fill="#DC2626"/><Cell fill="#D97706"/>
+                            </Pie>
+                            <Tooltip/>
+                          </PieChart>
+                        </ResponsiveContainer>
                       </div>
-                      <div className="space-y-1">
-                        {full.attendances.slice(0, 30).map(a => (
-                          <div key={a.id} className="flex items-center justify-between rounded-md border px-4 py-2 text-sm">
-                            <span>{new Date(a.date).toLocaleDateString("es-ES", { dateStyle: "long" })}</span>
-                            <span className={`inline-flex rounded px-2 py-0.5 text-xs font-semibold ${a.status === "PRESENTE" ? "bg-emerald-50 text-emerald-700" : a.status === "AUSENTE" ? "bg-red-50 text-red-700" : a.status === "TARDANZA" ? "bg-amber-50 text-amber-700" : "bg-blue-50 text-blue-700"}`}>{a.status}</span>
-                          </div>
-                        ))}
+                      {/* List */}
+                      <div className="space-y-1 overflow-y-auto max-h-[250px]">
+                        <h4 className="text-xs font-medium text-slate-500 mb-2 uppercase">Historial</h4>
+                        {full.attendances.slice(0,30).map(a=>(<div key={a.id} className="flex items-center justify-between rounded-md border px-3 py-1.5 text-sm"><span>{new Date(a.date).toLocaleDateString("es-ES",{dateStyle:"long"})}</span><span className={`inline-flex rounded px-2 py-0.5 text-xs font-semibold ${a.status==="PRESENTE"?"bg-emerald-50 text-emerald-700":a.status==="AUSENTE"?"bg-red-50 text-red-700":a.status==="TARDANZA"?"bg-amber-50 text-amber-700":"bg-blue-50 text-blue-700"}`}>{a.status}</span></div>))}
                       </div>
                     </div>
                   ) : <p className="text-sm text-slate-400">Sin registros de asistencia.</p>}
@@ -313,16 +321,25 @@ export function StudentProfileModal({ studentId, open, onClose }: Props) {
                 <div className="rounded-lg border bg-white p-6 h-full ">
                   <h3 className="text-base font-semibold text-slate-900 mb-4 flex items-center gap-2"><AlertTriangle className="h-4 w-4 text-[#1E3A5F]" /> Conducta</h3>
                   {full.behavior_reports?.length ? (
-                    <div className="space-y-2">
-                      {full.behavior_reports.map(r => (
-                        <div key={r.id} className="rounded-md border bg-slate-50 px-5 py-4">
-                          <div className="flex items-center gap-2 mb-2">
-                            <span className={`inline-flex rounded px-2 py-0.5 text-xs font-semibold ${r.severity === "GRAVE" ? "bg-red-50 text-red-700" : r.severity === "MODERADO" ? "bg-amber-50 text-amber-700" : "bg-blue-50 text-blue-700"}`}>{r.type}</span>
-                            <span className="text-xs text-slate-400">{new Date(r.created_at).toLocaleDateString("es-ES", { dateStyle: "long" })}</span>
-                          </div>
-                          <p className="text-sm text-slate-600">{r.description}</p>
-                        </div>
-                      ))}
+                    <div className="grid gap-6 lg:grid-cols-2">
+                      {/* Chart */}
+                      <div>
+                        <h4 className="text-xs font-medium text-slate-500 mb-2 uppercase">Resumen</h4>
+                        <ResponsiveContainer width="100%" height={200}>
+                          <BarChart data={(()=>{const m=new Map<string,number>();for(const r of full.behavior_reports){m.set(r.type,(m.get(r.type)??0)+1)}return[...m.entries()].map(([k,v])=>({name:k,count:v}))})()}>
+                            <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0"/>
+                            <XAxis dataKey="name" tick={{fontSize:10}}/>
+                            <YAxis allowDecimals={false} tick={{fontSize:10}}/>
+                            <Tooltip/>
+                            <Bar dataKey="count" fill="#2563EB" radius={[4,4,0,0]}><Cell fill="#D97706"/><Cell fill="#DC2626"/><Cell fill="#2563EB"/><Cell fill="#059669"/></Bar>
+                          </BarChart>
+                        </ResponsiveContainer>
+                      </div>
+                      {/* List */}
+                      <div className="space-y-2 overflow-y-auto max-h-[250px]">
+                        <h4 className="text-xs font-medium text-slate-500 mb-2 uppercase">Historial</h4>
+                        {full.behavior_reports.map(r=>(<div key={r.id} className="rounded-md border bg-slate-50 px-4 py-3"><div className="flex items-center gap-2 mb-1"><span className={`inline-flex rounded px-2 py-0.5 text-xs font-semibold ${r.severity==="GRAVE"?"bg-red-50 text-red-700":r.severity==="MODERADO"?"bg-amber-50 text-amber-700":"bg-blue-50 text-blue-700"}`}>{r.type}</span><span className="text-xs text-slate-400">{new Date(r.created_at).toLocaleDateString("es-ES",{dateStyle:"long"})}</span></div><p className="text-sm text-slate-600">{r.description}</p></div>))}
+                      </div>
                     </div>
                   ) : <p className="text-sm text-slate-400">Sin reportes de conducta.</p>}
                 </div>
